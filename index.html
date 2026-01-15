@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>福氣滿滿 - 精選年貨訂購系統 v3.9.1 (Firebase雲端版 - 預設關閉)</title>
+    <title>福氣滿滿 - 精選年貨訂購系統 v3.9.4 (會員訂單中心)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
@@ -75,7 +75,7 @@
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
             <div class="flex items-center gap-2">
                 <i class="fa-solid fa-dragon text-2xl text-cny-gold animate-pulse"></i>
-                <h1 class="text-xl md:text-2xl font-bold tracking-wide">福氣年貨 <span class="text-xs bg-green-600 text-white px-1 rounded ml-1">Cloud v3.9</span></h1>
+                <h1 class="text-xl md:text-2xl font-bold tracking-wide">福氣年貨 <span class="text-xs bg-green-600 text-white px-1 rounded ml-1">Cloud v3.9.4</span></h1>
             </div>
             
             <div class="flex items-center gap-4">
@@ -87,6 +87,10 @@
                             <i class="fa-solid fa-envelope mr-1"></i>輸入驗證碼
                         </button>
                     </div>
+                    <!-- 新增：我的訂單按鈕 -->
+                    <button onclick="openUserOrders()" class="bg-cny-gold text-cny-red px-3 py-1 rounded-full font-bold hover:bg-yellow-400 shadow-sm transition flex items-center ml-2">
+                        <i class="fa-solid fa-receipt mr-1"></i>我的訂單
+                    </button>
                     <button onclick="logout()" class="text-gray-200 hover:text-white underline text-xs whitespace-nowrap ml-2">登出</button>
                 </div>
 
@@ -129,7 +133,6 @@
     </footer>
 
     <!-- Templates & Modals -->
-    <!-- (模版結構維持原樣) -->
     
     <div id="print-invoice-container" class="print-container">
         <div class="max-w-3xl mx-auto border-2 border-gray-800 p-8">
@@ -141,16 +144,55 @@
     <div id="print-summary-container" class="print-container">
         <div class="max-w-4xl mx-auto p-4">
             <div class="text-center mb-6"><h1 class="text-2xl font-bold">銷售總表 Summary Report</h1><p class="text-sm text-gray-500">列印時間：<span id="summary-print-date"></span></p><p class="text-sm font-bold text-blue-700 mt-1" id="summary-period-range"></p></div>
-            <h3 class="font-bold border-l-4 border-gray-800 pl-2 mb-2">一、訂單明細列表</h3><table class="w-full text-xs border border-gray-300 mb-8"><thead><tr class="bg-gray-100"><th class="border p-2">編號</th><th class="border p-2">日期</th><th class="border p-2">訂購人</th><th class="border p-2">商品明細</th><th class="border p-2 text-right">金額</th></tr></thead><tbody id="summary-orders-body"></tbody></table>
+            <h3 class="font-bold border-l-4 border-gray-800 pl-2 mb-2">一、訂單明細列表</h3><table class="w-full text-xs border border-gray-300 mb-8"><thead><tr class="bg-gray-100"><th class="border p-2">編號</th><th class="border p-2">日期</th><th class="border p-2">訂購收件人 / (會員)</th><th class="border p-2">商品明細</th><th class="border p-2 text-right">金額</th></tr></thead><tbody id="summary-orders-body"></tbody></table>
             <h3 class="font-bold border-l-4 border-gray-800 pl-2 mb-2">二、商品銷售統計</h3><div class="flex justify-between items-start gap-8"><table class="w-full text-sm border border-gray-300 flex-1"><thead><tr class="bg-gray-200"><th class="border p-2">商品名稱</th><th class="border p-2 text-center">總銷售數</th><th class="border p-2 text-right">銷售總額</th></tr></thead><tbody id="summary-products-body"></tbody></table><div class="w-64 bg-gray-50 p-4 border border-gray-300 rounded"><h4 class="font-bold text-lg mb-2 text-center border-b pb-2">時段總營收</h4><p class="text-3xl font-bold text-center text-cny-red mt-2" id="summary-grand-total">NT$ 0</p><p class="text-center text-xs text-gray-500 mt-2">共 <span id="summary-order-count">0</span> 筆訂單</p></div></div>
         </div>
     </div>
     
     <div id="cart-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex justify-end transition-opacity duration-300"><div class="bg-white w-full max-w-md h-full shadow-2xl flex flex-col transform transition-transform duration-300 translate-x-full" id="cart-panel"><div class="p-4 bg-cny-red text-white flex justify-between items-center shadow"><h3 class="text-lg font-bold"><i class="fa-solid fa-list-check mr-2"></i>您的購物清單</h3><button onclick="toggleCart()" class="text-white hover:text-cny-gold text-xl transition"><i class="fa-solid fa-times"></i></button></div><div id="cart-items" class="flex-grow overflow-y-auto p-4 space-y-4"></div><div class="p-4 bg-gray-50 border-t"><div class="flex justify-between items-center mb-4 text-xl font-bold text-cny-red"><span>總金額：</span><span id="cart-total">NT$ 0</span></div><button onclick="showCheckout()" class="w-full bg-cny-red hover:bg-cny-dark-red text-white font-bold py-3 px-4 rounded shadow transition duration-200">前往結帳</button></div></div></div>
     <div id="checkout-modal" class="fixed inset-0 bg-black bg-opacity-60 z-[60] hidden flex items-center justify-center p-4"><div class="bg-white rounded-lg shadow-2xl w-full max-w-lg p-6 animate-fade-in relative"><button onclick="closeCheckout()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"><i class="fa-solid fa-times text-xl"></i></button><h3 class="text-2xl font-bold text-cny-red mb-6 border-b pb-2">訂購資訊填寫</h3><div id="checkout-member-hint" class="hidden mb-4 p-2 bg-blue-50 text-blue-700 text-sm rounded border border-blue-200 flex items-center"><i class="fa-solid fa-circle-info mr-2"></i><span>已自動帶入您的會員資料</span></div><form id="order-form" onsubmit="submitOrder(event)" class="space-y-4"><div><label class="block text-gray-700 font-bold mb-1">收件人姓名</label><input type="text" name="name" required class="w-full border border-gray-300 rounded px-3 py-2"></div><div><label class="block text-gray-700 font-bold mb-1">聯絡電話</label><input type="tel" name="phone" required pattern="[0-9]{10}" class="w-full border border-gray-300 rounded px-3 py-2"></div><div><label class="block text-gray-700 font-bold mb-1">配送地址</label><textarea name="address" required class="w-full border border-gray-300 rounded px-3 py-2" rows="3"></textarea></div><div class="pt-4"><button type="submit" class="w-full bg-cny-gold hover:bg-yellow-600 text-white font-bold py-3 px-4 rounded shadow">確認送出訂單</button></div></form></div></div>
-    <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-60 z-[70] hidden flex items-center justify-center p-4"><div class="bg-white rounded-lg shadow-2xl w-full max-w-md p-6 relative animate-fade-in max-h-[90vh] overflow-y-auto custom-scrollbar"><button onclick="toggleLoginModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-times text-xl"></i></button><div id="login-form-view"><h3 class="text-xl font-bold text-center text-gray-800 mb-6">會員登入</h3><form onsubmit="handleLogin(event)" class="space-y-4"><div><label class="block text-sm text-gray-600 mb-1">帳號</label><input type="text" name="username" required class="w-full border p-2 rounded"></div><div><label class="block text-sm text-gray-600 mb-1">密碼</label><input type="password" name="password" required class="w-full border p-2 rounded"></div><button type="submit" class="w-full bg-cny-red text-white font-bold py-2 rounded">登入</button></form><div class="flex justify-between items-center mt-4 text-sm"><button onclick="switchAuthView('forgot')" class="text-gray-500 hover:underline">忘記密碼？</button><span class="text-gray-400">|</span><button onclick="switchAuthView('register')" class="text-blue-600 hover:underline">註冊新帳號</button></div></div><div id="register-form-view" class="hidden"><h3 class="text-xl font-bold text-center text-gray-800 mb-4">註冊新會員</h3><form onsubmit="handleRegister(event)" class="space-y-3"><div class="grid grid-cols-2 gap-3"><div><label class="block text-sm text-gray-600 mb-1">帳號</label><input type="text" name="reg_username" required class="w-full border p-2 rounded"></div><div><label class="block text-sm text-gray-600 mb-1">密碼</label><input type="password" name="reg_password" required class="w-full border p-2 rounded"></div></div><div><label class="block text-sm text-gray-600 mb-1">Email</label><input type="email" name="reg_email" required class="w-full border p-2 rounded"></div><div><label class="block text-sm text-gray-600 mb-1">電話</label><input type="tel" name="reg_phone" required class="w-full border p-2 rounded"></div><div><label class="block text-sm text-gray-600 mb-1">地址</label><input type="text" name="reg_address" required class="w-full border p-2 rounded"></div><button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded">註冊</button><p class="text-xs text-gray-500 text-center mt-2" id="reg-status-hint">* 將透過 Google Mail 發送驗證碼</p></form><p class="text-center text-sm mt-4"><button onclick="switchAuthView('login')" class="text-blue-600 hover:underline">返回登入</button></p></div><div id="forgot-password-view" class="hidden"><h3 class="text-xl font-bold text-center text-gray-800 mb-4">找回密碼</h3><form onsubmit="handleForgotPassword(event)" class="space-y-4"><div><label class="block text-sm text-gray-600 mb-1">帳號</label><input type="text" name="forgot_username" required class="w-full border p-2 rounded"></div><div><label class="block text-sm text-gray-600 mb-1">Email</label><input type="email" name="forgot_email" required class="w-full border p-2 rounded"></div><button type="submit" class="w-full bg-cny-gold text-white font-bold py-2 rounded">取回密碼</button></form><p class="text-center text-sm mt-4"><button onclick="switchAuthView('login')" class="text-blue-600 hover:underline">返回登入</button></p></div></div></div>
+    
+    <!-- 新增：會員訂單查詢 Modal -->
+    <div id="user-orders-modal" class="fixed inset-0 bg-black bg-opacity-60 z-[80] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-2xl h-[80vh] flex flex-col relative animate-fade-in">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-lg">
+                <h3 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-receipt mr-2"></i>我的訂單記錄</h3>
+                <button onclick="closeUserOrders()" class="text-gray-500 hover:text-gray-800 text-2xl"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div class="flex-grow overflow-y-auto p-6 bg-gray-50 custom-scrollbar">
+                <div id="user-orders-list" class="space-y-4">
+                    <!-- JS 動態填入 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 登入與註冊 Modal (Updated with Name field) -->
+    <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-60 z-[70] hidden flex items-center justify-center p-4"><div class="bg-white rounded-lg shadow-2xl w-full max-w-md p-6 relative animate-fade-in max-h-[90vh] overflow-y-auto custom-scrollbar"><button onclick="toggleLoginModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-times text-xl"></i></button><div id="login-form-view"><h3 class="text-xl font-bold text-center text-gray-800 mb-6">會員登入</h3><form onsubmit="handleLogin(event)" class="space-y-4"><div><label class="block text-sm text-gray-600 mb-1">帳號</label><input type="text" name="username" required class="w-full border p-2 rounded"></div><div><label class="block text-sm text-gray-600 mb-1">密碼</label><input type="password" name="password" required class="w-full border p-2 rounded"></div><button type="submit" class="w-full bg-cny-red text-white font-bold py-2 rounded">登入</button></form><div class="flex justify-between items-center mt-4 text-sm"><button onclick="switchAuthView('forgot')" class="text-gray-500 hover:underline">忘記密碼？</button><span class="text-gray-400">|</span><button onclick="switchAuthView('register')" class="text-blue-600 hover:underline">註冊新帳號</button></div></div>
+    <div id="register-form-view" class="hidden">
+        <h3 class="text-xl font-bold text-center text-gray-800 mb-4">註冊新會員</h3>
+        <form onsubmit="handleRegister(event)" class="space-y-3">
+            <div class="grid grid-cols-2 gap-3">
+                <div><label class="block text-sm text-gray-600 mb-1">帳號 (登入用)</label><input type="text" name="reg_username" required class="w-full border p-2 rounded" placeholder="user123"></div>
+                <div><label class="block text-sm text-gray-600 mb-1">密碼</label><input type="password" name="reg_password" required class="w-full border p-2 rounded"></div>
+            </div>
+            <!-- 新增姓名欄位 -->
+            <div><label class="block text-sm text-gray-600 mb-1">真實姓名</label><input type="text" name="reg_name" required class="w-full border p-2 rounded" placeholder="王小明"></div>
+            <div><label class="block text-sm text-gray-600 mb-1">Email</label><input type="email" name="reg_email" required class="w-full border p-2 rounded"></div>
+            <div><label class="block text-sm text-gray-600 mb-1">電話</label><input type="tel" name="reg_phone" required class="w-full border p-2 rounded"></div>
+            <div><label class="block text-sm text-gray-600 mb-1">地址</label><input type="text" name="reg_address" required class="w-full border p-2 rounded"></div>
+            <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded">註冊</button>
+            <p class="text-xs text-gray-500 text-center mt-2" id="reg-status-hint">* 將透過 Google Mail 發送驗證碼</p>
+        </form>
+        <p class="text-center text-sm mt-4"><button onclick="switchAuthView('login')" class="text-blue-600 hover:underline">返回登入</button></p>
+    </div>
+    <div id="forgot-password-view" class="hidden"><h3 class="text-xl font-bold text-center text-gray-800 mb-4">找回密碼</h3><form onsubmit="handleForgotPassword(event)" class="space-y-4"><div><label class="block text-sm text-gray-600 mb-1">帳號</label><input type="text" name="forgot_username" required class="w-full border p-2 rounded"></div><div><label class="block text-sm text-gray-600 mb-1">Email</label><input type="email" name="forgot_email" required class="w-full border p-2 rounded"></div><button type="submit" class="w-full bg-cny-gold text-white font-bold py-2 rounded">取回密碼</button></form><p class="text-center text-sm mt-4"><button onclick="switchAuthView('login')" class="text-blue-600 hover:underline">返回登入</button></p></div></div></div>
+    
     <div id="edit-product-modal" class="fixed inset-0 bg-black bg-opacity-60 z-[90] hidden flex items-center justify-center p-4"><div class="bg-white rounded-lg shadow-2xl w-full max-w-lg p-6 relative animate-fade-in"><button onclick="closeEditProductModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-times text-xl"></i></button><h3 class="text-xl font-bold text-gray-800 mb-4">編輯商品資訊</h3><form onsubmit="handleEditProduct(event)" class="space-y-3"><input type="hidden" name="edit_id"><div><label class="text-xs text-gray-500">名稱</label><input type="text" name="edit_name" required class="w-full border p-2 rounded"></div><div class="grid grid-cols-2 gap-3"><div><label class="text-xs text-gray-500">價格</label><input type="number" name="edit_price" required class="w-full border p-2 rounded"></div><div><label class="text-xs text-gray-500">庫存</label><input type="number" name="edit_stock" required class="w-full border p-2 rounded"></div></div><div><label class="text-xs text-gray-500">分類</label><select name="edit_category" id="edit-product-category-select" class="w-full border p-2 rounded"></select></div><div><label class="text-xs text-gray-500">圖片</label><input type="text" name="edit_image" required class="w-full border p-2 rounded"></div><div><label class="text-xs text-gray-500">描述</label><input type="text" name="edit_desc" required class="w-full border p-2 rounded"></div><button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded">儲存變更</button></form></div></div>
-    <div id="edit-user-modal" class="fixed inset-0 bg-black bg-opacity-60 z-[90] hidden flex items-center justify-center p-4"><div class="bg-white rounded-lg shadow-2xl w-full max-w-lg p-6 relative animate-fade-in"><button onclick="closeEditUserModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-times text-xl"></i></button><h3 class="text-xl font-bold text-gray-800 mb-4">編輯會員資料</h3><form onsubmit="handleEditUser(event)" class="space-y-3"><div><label class="text-xs text-gray-500">帳號</label><input type="text" name="edit_u_username" readonly class="w-full border p-2 rounded bg-gray-100"></div><div><label class="text-xs text-gray-500">Email</label><input type="email" name="edit_u_email" required class="w-full border p-2 rounded"></div><div><label class="text-xs text-gray-500">電話</label><input type="tel" name="edit_u_phone" required class="w-full border p-2 rounded"></div><div><label class="text-xs text-gray-500">地址</label><input type="text" name="edit_u_address" required class="w-full border p-2 rounded"></div><button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded">儲存變更</button></form></div></div>
+    
+    <!-- 編輯使用者 Modal (Updated with Name field) -->
+    <div id="edit-user-modal" class="fixed inset-0 bg-black bg-opacity-60 z-[90] hidden flex items-center justify-center p-4"><div class="bg-white rounded-lg shadow-2xl w-full max-w-lg p-6 relative animate-fade-in"><button onclick="closeEditUserModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-times text-xl"></i></button><h3 class="text-xl font-bold text-gray-800 mb-4">編輯會員資料</h3><form onsubmit="handleEditUser(event)" class="space-y-3"><div><label class="text-xs text-gray-500">帳號</label><input type="text" name="edit_u_username" readonly class="w-full border p-2 rounded bg-gray-100"></div><div><label class="text-xs text-gray-500">姓名</label><input type="text" name="edit_u_name" required class="w-full border p-2 rounded"></div><div><label class="text-xs text-gray-500">Email</label><input type="email" name="edit_u_email" required class="w-full border p-2 rounded"></div><div><label class="text-xs text-gray-500">電話</label><input type="tel" name="edit_u_phone" required class="w-full border p-2 rounded"></div><div><label class="text-xs text-gray-500">地址</label><input type="text" name="edit_u_address" required class="w-full border p-2 rounded"></div><button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded">儲存變更</button></form></div></div>
+    
     <div id="manage-category-modal" class="fixed inset-0 bg-black bg-opacity-60 z-[95] hidden flex items-center justify-center p-4"><div class="bg-white rounded-lg shadow-2xl w-full max-w-md p-6 relative animate-fade-in"><button onclick="closeCategoryModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-times text-xl"></i></button><h3 class="text-xl font-bold text-gray-800 mb-4">商品分類管理</h3><div class="mb-4 bg-gray-50 p-3 rounded border"><h5 class="text-sm font-bold text-gray-700 mb-2">新增分類</h5><form onsubmit="handleAddCategory(event)" class="flex gap-2"><input type="text" name="new_cat_name" placeholder="名稱 (如: 伴手禮)" required class="flex-1 border p-2 rounded text-sm"><input type="text" name="new_cat_id" placeholder="代碼 (如: gift)" required class="w-24 border p-2 rounded text-sm"><button type="submit" class="bg-green-600 text-white px-3 rounded text-sm hover:bg-green-700">新增</button></form></div><div class="max-h-60 overflow-y-auto custom-scrollbar"><table class="w-full text-sm text-left"><thead class="bg-gray-100 text-gray-600"><tr><th class="p-2">名稱</th><th class="p-2">代碼</th><th class="p-2 text-right">操作</th></tr></thead><tbody id="category-list-body"></tbody></table></div></div></div>
 
     <div id="admin-modal" class="fixed inset-0 bg-black bg-opacity-60 z-[80] hidden flex items-center justify-center p-4">
@@ -168,7 +210,7 @@
             <div class="flex-grow overflow-y-auto p-6 bg-gray-50">
                 <div id="view-orders" class="admin-view"><div class="bg-white p-4 rounded shadow mb-4"><div class="flex justify-between items-center mb-4"><div class="flex items-center gap-3"><h4 class="font-bold text-lg">訂單列表</h4><select id="admin-order-period-filter" onchange="renderAdminOrders()" class="text-sm border border-gray-300 rounded p-1"><option value="all">全部時段</option></select></div><div class="flex gap-2"><button onclick="printAllOrdersSummary()" class="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 text-sm flex items-center"><i class="fa-solid fa-file-invoice-dollar mr-1"></i> 總表</button><button onclick="exportToCSV()" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm flex items-center"><i class="fa-solid fa-download mr-1"></i> CSV</button></div></div><div class="text-xs text-gray-500 mb-2">顯示: <span id="admin-order-count">0</span> 筆</div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-gray-100 border-b"><tr><th class="p-2">訂單號</th><th class="p-2">日期</th><th class="p-2">姓名</th><th class="p-2">金額</th><th class="p-2">操作</th></tr></thead><tbody id="admin-order-list"></tbody></table></div></div><div class="bg-white p-4 rounded shadow"><h4 class="font-bold text-gray-700 mb-2">Google Sheet / Mail 同步</h4><div class="flex gap-2"><input type="text" id="admin-sheet-url" placeholder="Google Script URL" class="flex-grow border p-2 rounded text-sm"><button onclick="saveSheetUrl()" class="bg-blue-600 text-white px-4 rounded text-sm">儲存</button></div><p class="text-xs text-gray-500 mt-1" id="sheet-status-text">未設定</p></div></div>
                 <div id="view-products" class="admin-view hidden"><div class="bg-white p-4 rounded shadow mb-4"><div class="flex justify-between items-center mb-4"><h4 class="font-bold text-lg">商品管理</h4><button onclick="openCategoryModal()" class="bg-orange-600 text-white px-3 py-1.5 rounded text-sm hover:bg-orange-700 flex items-center"><i class="fa-solid fa-folder-open mr-2"></i>分類管理</button></div><div class="flex gap-2 mb-4 p-3 bg-green-50 border border-green-200 rounded"><button onclick="downloadProductTemplate()" class="bg-gray-600 text-white px-3 py-2 rounded text-sm"><i class="fa-solid fa-file-csv mr-2"></i>下載範本</button><button onclick="document.getElementById('product-import-input').click()" class="bg-green-600 text-white px-3 py-2 rounded text-sm"><i class="fa-solid fa-upload mr-2"></i>匯入CSV</button><input type="file" id="product-import-input" hidden accept=".csv" onchange="handleProductImport(this)"><div class="text-xs text-green-700 mt-2 ml-2"><i class="fa-solid fa-circle-info mr-1"></i>請使用 "CSV UTF-8" 格式存檔</div></div><form onsubmit="handleAddProduct(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4"><input type="text" name="p_name" placeholder="名稱" required class="border p-2 rounded"><input type="number" name="p_price" placeholder="價格" required class="border p-2 rounded"><select name="p_category" id="add-product-category-select" class="border p-2 rounded"></select><input type="text" name="p_image" placeholder="圖片URL" required class="border p-2 rounded"><input type="number" name="p_stock" placeholder="庫存" required class="border p-2 rounded"><input type="text" name="p_desc" placeholder="描述" required class="col-span-1 md:col-span-2 border p-2 rounded"><button type="submit" class="col-span-1 md:col-span-2 bg-cny-red text-white py-2 rounded">新增商品</button></form></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="admin-product-list"></div></div>
-                <div id="view-users" class="admin-view hidden"><div class="bg-white p-4 rounded shadow mb-4 border-l-4 border-blue-500"><h4 class="font-bold text-lg mb-4 text-blue-800">我的帳號設定</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><form onsubmit="handleUpdateEmail(event)" class="bg-blue-50 p-4 rounded border border-blue-100"><h5 class="font-bold text-sm mb-2">聯絡信箱</h5><input type="text" id="current_admin_email" class="w-full border p-2 rounded text-sm mb-2 bg-gray-100" readonly><input type="email" name="new_email" required class="w-full border p-2 rounded text-sm mb-2" placeholder="新信箱"><button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded text-sm">更新</button></form><form onsubmit="handleChangePassword(event)" class="bg-yellow-50 p-4 rounded border border-yellow-100"><h5 class="font-bold text-sm mb-2">修改密碼</h5><input type="password" name="old_pass" required class="w-full border p-2 rounded text-sm mb-2" placeholder="舊密碼"><input type="password" name="new_pass" required class="w-full border p-2 rounded text-sm mb-2" placeholder="新密碼"><button type="submit" class="w-full bg-yellow-600 text-white px-4 py-2 rounded text-sm">更新</button></form></div></div><div class="bg-white p-4 rounded shadow mb-4"><h4 class="font-bold text-lg mb-4">新增管理員</h4><form onsubmit="handleAddAdmin(event)" class="flex gap-2"><input type="text" name="new_admin_name" placeholder="帳號" required class="border p-2 rounded flex-1"><input type="password" name="new_admin_pass" placeholder="密碼" required class="border p-2 rounded flex-1"><input type="hidden" name="new_admin_email" value="admin@local"><button type="submit" class="bg-purple-600 text-white px-4 rounded">新增</button></form></div><div class="bg-white p-4 rounded shadow"><h4 class="font-bold text-gray-700 mb-2">會員列表</h4><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-gray-100 border-b"><tr><th class="p-2">帳號</th><th class="p-2">等級</th><th class="p-2">Email</th><th class="p-2">狀態</th><th class="p-2">操作</th></tr></thead><tbody id="admin-user-list"></tbody></table></div></div></div>
+                <div id="view-users" class="admin-view hidden"><div class="bg-white p-4 rounded shadow mb-4 border-l-4 border-blue-500"><h4 class="font-bold text-lg mb-4 text-blue-800">我的帳號設定</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><form onsubmit="handleUpdateEmail(event)" class="bg-blue-50 p-4 rounded border border-blue-100"><h5 class="font-bold text-sm mb-2">聯絡信箱</h5><input type="text" id="current_admin_email" class="w-full border p-2 rounded text-sm mb-2 bg-gray-100" readonly><input type="email" name="new_email" required class="w-full border p-2 rounded text-sm mb-2" placeholder="新信箱"><button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded text-sm">更新</button></form><form onsubmit="handleChangePassword(event)" class="bg-yellow-50 p-4 rounded border border-yellow-100"><h5 class="font-bold text-sm mb-2">修改密碼</h5><input type="password" name="old_pass" required class="w-full border p-2 rounded text-sm mb-2" placeholder="舊密碼"><input type="password" name="new_pass" required class="w-full border p-2 rounded text-sm mb-2" placeholder="新密碼"><button type="submit" class="w-full bg-yellow-600 text-white px-4 py-2 rounded text-sm">更新</button></form></div></div><div class="bg-white p-4 rounded shadow mb-4"><h4 class="font-bold text-lg mb-4">新增管理員</h4><form onsubmit="handleAddAdmin(event)" class="flex gap-2"><input type="text" name="new_admin_name" placeholder="帳號" required class="border p-2 rounded flex-1"><input type="password" name="new_admin_pass" placeholder="密碼" required class="border p-2 rounded flex-1"><input type="hidden" name="new_admin_email" value="admin@local"><button type="submit" class="bg-purple-600 text-white px-4 rounded">新增</button></form></div><div class="bg-white p-4 rounded shadow"><h4 class="font-bold text-gray-700 mb-2">會員列表</h4><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-gray-100 border-b"><tr><th class="p-2">姓名 (帳號)</th><th class="p-2">等級</th><th class="p-2">Email</th><th class="p-2">狀態</th><th class="p-2">操作</th></tr></thead><tbody id="admin-user-list"></tbody></table></div></div></div>
                 <div id="view-settings" class="admin-view hidden"><div class="bg-white p-4 rounded shadow mb-4 border-l-4 border-teal-500"><h4 class="font-bold text-lg mb-2 text-teal-800"><i class="fa-solid fa-clock mr-2"></i>開放訂購時程管理</h4><p class="text-sm text-gray-600 mb-4">設定開放訂購的日期範圍。</p><form onsubmit="handleAddPeriod(event)" class="flex gap-2 items-end mb-4 bg-teal-50 p-3 rounded"><div class="flex-1"><label class="text-xs text-gray-500 block">時段名稱</label><input type="text" name="period_name" required class="w-full border p-2 rounded text-sm"></div><div><label class="text-xs text-gray-500 block">開始日期</label><input type="date" name="period_start" required class="border p-2 rounded text-sm"></div><div><label class="text-xs text-gray-500 block">結束日期</label><input type="date" name="period_end" required class="border p-2 rounded text-sm"></div><button type="submit" class="bg-teal-600 text-white px-4 py-2 rounded text-sm hover:bg-teal-700 h-[38px]">新增</button></form><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-gray-100 border-b"><tr><th class="p-2">名稱</th><th class="p-2">開始日期</th><th class="p-2">結束日期</th><th class="p-2">狀態</th><th class="p-2">操作</th></tr></thead><tbody id="admin-period-list"></tbody></table></div></div></div>
             </div>
         </div>
@@ -214,12 +256,6 @@
         let googleSheetUrl = "";
         
         // Configuration
-        // --- 請將原本的這兩行 ---
-        // const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        // const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        
-        // --- 替換成下方的格式，並填入您的資料 ---
-        
         const firebaseConfig = {
   apiKey: "AIzaSyANrNUlttgFDG2ILlHTffxiGtxKWkWGq7U",
   authDomain: "order-1801e.firebaseapp.com",
@@ -249,7 +285,7 @@
             { id: 'dish', name: '年菜佳餚' }
         ];
 
-        const DEFAULT_USERS = [{ username: 'admin', password: '123456', role: 'admin', joined: '2026/01/01', email: 'admin@example.com', phone: '0900000000', address: '台北市', isVerified: true, purchaseCount: 0, level: 'admin' }];
+        const DEFAULT_USERS = [{ username: 'admin', password: '123456', name: '管理員', role: 'admin', joined: '2026/01/01', email: 'admin@example.com', phone: '0900000000', address: '台北市', isVerified: true, purchaseCount: 0, level: 'admin' }];
         
         let currentUser = JSON.parse(sessionStorage.getItem('cny_current_user')) || null;
         let cart = {}; 
@@ -358,6 +394,10 @@
             // 4. Orders
             onSnapshot(collection(db, BASE_PATH, 'orders'), (snapshot) => {
                 orders = snapshot.docs.map(d => ({...d.data(), _docId: d.id}));
+                // Real-time update for user orders view if open
+                if (!document.getElementById('user-orders-modal').classList.contains('hidden')) {
+                    renderUserOrders();
+                }
                 if(currentUser?.role === 'admin') renderAdminOrders();
             });
 
@@ -519,14 +559,27 @@
         }
         
         function toggleCart(){ const m=document.getElementById('cart-modal'); const p=document.getElementById('cart-panel'); if(m.classList.contains('hidden')){ m.classList.remove('hidden'); setTimeout(()=>p.classList.remove('translate-x-full'),10); }else{ p.classList.add('translate-x-full'); setTimeout(()=>m.classList.add('hidden'),300); } }
-        function showCheckout(){ if(Object.keys(cart).length===0){ showModal("提示","空車","info"); return; } if(currentUser && !currentUser.isVerified){ showModal("受限","請先驗證帳號","error"); return; } toggleCart(); document.getElementById('checkout-modal').classList.remove('hidden'); const f=document.getElementById('order-form'); if(currentUser){ f.name.value=currentUser.username; f.phone.value=currentUser.phone||''; f.address.value=currentUser.address||''; document.getElementById('checkout-member-hint').classList.remove('hidden'); } else { f.reset(); document.getElementById('checkout-member-hint').classList.add('hidden'); } }
+        function showCheckout(){ if(Object.keys(cart).length===0){ showModal("提示","空車","info"); return; } if(currentUser && !currentUser.isVerified){ showModal("受限","請先驗證帳號","error"); return; } toggleCart(); document.getElementById('checkout-modal').classList.remove('hidden'); const f=document.getElementById('order-form'); if(currentUser){ f.name.value=currentUser.name || currentUser.username; f.phone.value=currentUser.phone||''; f.address.value=currentUser.address||''; document.getElementById('checkout-member-hint').classList.remove('hidden'); } else { f.reset(); document.getElementById('checkout-member-hint').classList.add('hidden'); } }
         function closeCheckout(){ document.getElementById('checkout-modal').classList.add('hidden'); }
         async function submitOrder(e){
             e.preventDefault(); if(currentUser && !currentUser.isVerified){ showModal("錯誤","帳號未驗證","error"); return; } const periodStatus = checkOrderingStatus(); if (!periodStatus.isOpen) { showModal("錯誤", "目前非開放訂購期間", "error"); return; }
             const btn=e.target.querySelector('button'); const old=btn.innerHTML; const fd=new FormData(e.target); let itemsDetail = []; let itemsStrList = []; let total = 0; 
             for(const [id,q] of Object.entries(cart)){ const p=products.find(x=>x.id==id); if(p){ const subtotal = p.price * q; itemsDetail.push({ name: p.name, price: p.price, qty: q, subtotal: subtotal }); itemsStrList.push(`${p.name} x${q}`); total += subtotal; } }
             const dateStr = new Date().toISOString().slice(0,10).replace(/-/g, ''); const rand = Math.floor(Math.random()*10000).toString().padStart(4, '0'); const orderId = `ORD-${dateStr}-${rand}`; const now = new Date();
-            const ord = { orderId: orderId, timestamp: now.toLocaleString(), rawDate: now.toISOString().split('T')[0], name: fd.get('name'), phone: fd.get('phone'), address: fd.get('address'), items: itemsStrList.join(", "), itemsDetail: itemsDetail, total, member: currentUser ? currentUser.username : 'guest' };
+            // New logic: save member name separately if available
+            const ord = { 
+                orderId: orderId, 
+                timestamp: now.toLocaleString(), 
+                rawDate: now.toISOString().split('T')[0], 
+                name: fd.get('name'), 
+                phone: fd.get('phone'), 
+                address: fd.get('address'), 
+                items: itemsStrList.join(", "), 
+                itemsDetail: itemsDetail, 
+                total, 
+                member: currentUser ? currentUser.username : 'guest',
+                memberName: currentUser ? (currentUser.name || '') : '' 
+            };
             btn.innerHTML='處理中...'; btn.disabled=true;
             try{
                 // Firestore Add
@@ -547,6 +600,80 @@
                 
                 showModal('成功',`訂單已送出<br>單號：${orderId}<br>金額: ${total}`,'success'); cart={}; updateCartUI(); e.target.reset(); closeCheckout();
             }catch(err){ console.error(err); showModal("錯誤","失敗: " + err.message,"error"); }finally{ btn.innerHTML=old; btn.disabled=false; }
+        }
+
+        // --- User Order Functions (New) ---
+        function openUserOrders() {
+            if(!currentUser) return;
+            document.getElementById('user-orders-modal').classList.remove('hidden');
+            renderUserOrders();
+        }
+
+        function closeUserOrders() {
+            document.getElementById('user-orders-modal').classList.add('hidden');
+        }
+
+        function renderUserOrders() {
+            const container = document.getElementById('user-orders-list');
+            container.innerHTML = '';
+            
+            // Filter orders for current user by username
+            // Handle both legacy orders (no member field potentially) and new ones
+            const myOrders = orders.filter(o => o.member === currentUser.username).sort((a,b) => {
+                // Sort by timestamp desc
+                const da = new Date(a.timestamp);
+                const db = new Date(b.timestamp);
+                return db - da;
+            });
+
+            if (myOrders.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-gray-500 py-10 flex flex-col items-center">
+                        <i class="fa-regular fa-folder-open text-5xl mb-4 text-gray-300"></i>
+                        <p class="text-lg">您目前沒有訂單記錄</p>
+                        <button onclick="closeUserOrders()" class="mt-4 text-cny-red hover:underline">去逛逛</button>
+                    </div>`;
+                return;
+            }
+
+            myOrders.forEach(o => {
+                const div = document.createElement('div');
+                div.className = "bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition relative group";
+                
+                // Determine ID for printing (orderId is preferred, timestamp fallback for old data)
+                const idToPass = o.orderId || o.timestamp;
+
+                div.innerHTML = `
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 pb-3 border-b border-gray-100">
+                        <div class="flex items-center gap-2 mb-2 sm:mb-0">
+                            <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded font-mono">
+                                ${o.orderId || '歷史訂單'}
+                            </span>
+                            <span class="text-xs text-gray-500 flex items-center">
+                                <i class="fa-regular fa-calendar mr-1"></i> ${o.timestamp.split(' ')[0]}
+                            </span>
+                        </div>
+                        <span class="text-lg font-bold text-cny-red">
+                            NT$ ${o.total}
+                        </span>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-700 font-bold mb-1">商品內容：</p>
+                        <p class="text-sm text-gray-600 leading-relaxed">${o.items}</p>
+                    </div>
+
+                    <div class="flex justify-between items-center pt-2">
+                        <div class="text-xs text-gray-400">
+                            收件人: ${o.name}
+                        </div>
+                        <button onclick="printOrder('${idToPass}')" class="bg-gray-100 hover:bg-gray-800 hover:text-white text-gray-700 px-4 py-2 rounded text-sm transition flex items-center shadow-sm">
+                            <i class="fa-solid fa-print mr-2"></i> 查看 / 列印明細
+                        </button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
         }
 
         // --- Admin Functions ---
@@ -642,7 +769,7 @@
             } 
         }
         
-        function renderAdminUsers(){ const b=document.getElementById('admin-user-list'); b.innerHTML=''; users.forEach(u=>{ const tr=document.createElement('tr'); const lvBadge = u.role === 'admin' ? '' : `<span class="text-xs px-1 rounded border ${u.level==='金牌會員'?'bg-yellow-100 text-yellow-800 border-yellow-300':(u.level==='銀牌會員'?'bg-blue-50 text-blue-800 border-blue-200':'bg-gray-100')}">${u.level}</span>`; tr.innerHTML=`<td class="p-2 font-bold">${u.username}<br>${lvBadge}</td><td class="p-2 text-xs">${u.email||'-'}</td><td class="p-2 text-xs">${u.isVerified?'<span class="text-green-600">已驗證</span>':'<span class="text-red-500">未驗證</span>'}</td><td class="p-2 flex gap-2"><button onclick="openEditUserModal('${u.username}')" class="text-blue-500"><i class="fa-solid fa-user-pen"></i></button></td>`; b.appendChild(tr); }); }
+        function renderAdminUsers(){ const b=document.getElementById('admin-user-list'); b.innerHTML=''; users.forEach(u=>{ const tr=document.createElement('tr'); const lvBadge = u.role === 'admin' ? '' : `<span class="text-xs px-1 rounded border ${u.level==='金牌會員'?'bg-yellow-100 text-yellow-800 border-yellow-300':(u.level==='銀牌會員'?'bg-blue-50 text-blue-800 border-blue-200':'bg-gray-100')}">${u.level}</span>`; tr.innerHTML=`<td class="p-2 font-bold">${u.name || u.username}<br><span class="text-xs font-normal text-gray-500">(${u.username})</span><br>${lvBadge}</td><td class="p-2 text-xs">${u.email||'-'}</td><td class="p-2 text-xs">${u.isVerified?'<span class="text-green-600">已驗證</span>':'<span class="text-red-500">未驗證</span>'}</td><td class="p-2 flex gap-2"><button onclick="openEditUserModal('${u.username}')" class="text-blue-500"><i class="fa-solid fa-user-pen"></i></button></td>`; b.appendChild(tr); }); }
         
         async function handleAddAdmin(e){ 
             e.preventDefault(); const f=e.target; 
@@ -666,16 +793,104 @@
         
         async function handleEditProduct(e) { e.preventDefault(); const f = e.target; const id = parseInt(f.edit_id.value); const p = products.find(p => p.id === id); if(p) { await updateDoc(doc(db, BASE_PATH, 'products', p._docId), { name: f.edit_name.value, price: parseInt(f.edit_price.value), stock: parseInt(f.edit_stock.value), category: f.edit_category.value, image: f.edit_image.value, desc: f.edit_desc.value }); closeEditProductModal(); showToast("商品更新成功"); } }
         
-        function openEditUserModal(username) { const u = users.find(user => user.username === username); if(!u) return; const form = document.querySelector('#edit-user-modal form'); form.edit_u_username.value = u.username; form.edit_u_level.value = u.level; form.edit_u_count.value = u.purchaseCount; form.edit_u_email.value = u.email || ''; form.edit_u_phone.value = u.phone || ''; form.edit_u_address.value = u.address || ''; document.getElementById('edit-user-modal').classList.remove('hidden'); }
+        function openEditUserModal(username) { const u = users.find(user => user.username === username); if(!u) return; const form = document.querySelector('#edit-user-modal form'); form.edit_u_username.value = u.username; form.edit_u_name.value = u.name || ''; form.edit_u_level.value = u.level; form.edit_u_count.value = u.purchaseCount; form.edit_u_email.value = u.email || ''; form.edit_u_phone.value = u.phone || ''; form.edit_u_address.value = u.address || ''; document.getElementById('edit-user-modal').classList.remove('hidden'); }
         function closeEditUserModal() { document.getElementById('edit-user-modal').classList.add('hidden'); }
         
-        async function handleEditUser(e) { e.preventDefault(); const f = e.target; const u = users.find(u => u.username === f.edit_u_username.value); if(u) { await updateDoc(doc(db, BASE_PATH, 'users', u._docId), { email: f.edit_u_email.value, phone: f.edit_u_phone.value, address: f.edit_u_address.value }); closeEditUserModal(); showToast("會員資料更新成功"); } }
+        async function handleEditUser(e) { e.preventDefault(); const f = e.target; const u = users.find(u => u.username === f.edit_u_username.value); if(u) { await updateDoc(doc(db, BASE_PATH, 'users', u._docId), { name: f.edit_u_name.value, email: f.edit_u_email.value, phone: f.edit_u_phone.value, address: f.edit_u_address.value }); closeEditUserModal(); showToast("會員資料更新成功"); } }
         
         async function saveSheetUrl(){ const url = document.getElementById('admin-sheet-url').value; await updateDoc(doc(db, BASE_PATH, 'settings', 'global_settings'), { sheetUrl: url }).catch(async () => { await require('firebase/firestore').setDoc(doc(db, BASE_PATH, 'settings', 'global_settings'), { sheetUrl: url }); }); showToast("已儲存"); }
         function updateSheetStatusUI(){ document.getElementById('sheet-status-text').textContent=googleSheetUrl.length>10?'已啟用':'未設定'; }
         
-        function printOrder(orderId) { const order = orders.find(o => o.orderId === orderId) || orders.find(o => o.timestamp === orderId); if (!order) { showToast("找不到訂單"); return; } document.getElementById('inv-id').textContent = order.orderId || '舊資料無編號'; document.getElementById('inv-date').textContent = order.timestamp; document.getElementById('inv-name').textContent = order.name; document.getElementById('inv-phone').textContent = order.phone; document.getElementById('inv-address').textContent = order.address; document.getElementById('inv-member').textContent = order.member; document.getElementById('inv-total').textContent = `NT$ ${order.total}`; const tbody = document.getElementById('inv-items-body'); tbody.innerHTML = ''; if (order.itemsDetail && Array.isArray(order.itemsDetail)) { order.itemsDetail.forEach(item => { tbody.innerHTML += `<tr class="border-b border-gray-300"><td class="py-2 pl-2">${item.name}</td><td class="py-2 text-center">$${item.price}</td><td class="py-2 text-center">${item.qty}</td><td class="py-2 text-right pr-2">$${item.subtotal}</td></tr>`; }); } else { const itemsStr = order.items.split(', '); itemsStr.forEach(str => { const parts = str.split(' x'); tbody.innerHTML += `<tr class="border-b border-gray-300"><td class="py-2 pl-2">${parts[0]}</td><td class="py-2 text-center">-</td><td class="py-2 text-center">${parts[1]}</td><td class="py-2 text-right pr-2">-</td></tr>`; }); } document.getElementById('print-invoice-container').classList.add('active-print'); window.print(); document.getElementById('print-invoice-container').classList.remove('active-print'); }
-        function printAllOrdersSummary() { const filterVal = document.getElementById('admin-order-period-filter').value; let targetOrders = [...orders]; let titleRange = "所有時段"; if (filterVal !== 'all') { const period = orderingPeriods.find(p => p.id == filterVal); if (period) { titleRange = `檔期：${period.name} (${period.startDate} ~ ${period.endDate})`; const start = new Date(period.startDate); const end = new Date(period.endDate); end.setHours(23, 59, 59, 999); targetOrders = targetOrders.filter(o => { let oDate = o.rawDate ? new Date(o.rawDate) : new Date(o.timestamp); return oDate >= start && oDate <= end; }); } } if(targetOrders.length === 0) { showToast("目前篩選範圍無訂單"); return; } document.getElementById('summary-print-date').textContent = new Date().toLocaleString(); document.getElementById('summary-period-range').textContent = titleRange; const ordersBody = document.getElementById('summary-orders-body'); const productsBody = document.getElementById('summary-products-body'); ordersBody.innerHTML = ''; productsBody.innerHTML = ''; let grandTotal = 0; let productStats = {}; [...targetOrders].reverse().forEach(o => { grandTotal += parseInt(o.total); if (o.itemsDetail && Array.isArray(o.itemsDetail)) { o.itemsDetail.forEach(item => { if (!productStats[item.name]) productStats[item.name] = { qty: 0, amount: 0 }; productStats[item.name].qty += parseInt(item.qty); productStats[item.name].amount += parseInt(item.subtotal); }); } else { const itemsStr = o.items.split(', '); itemsStr.forEach(str => { const parts = str.split(' x'); const name = parts[0]; const qty = parseInt(parts[1]); const productRef = products.find(p => p.name === name); const price = productRef ? productRef.price : 0; if (!productStats[name]) productStats[name] = { qty: 0, amount: 0 }; productStats[name].qty += qty; productStats[name].amount += (qty * price); }); } ordersBody.innerHTML += `<tr class="border-b"><td class="border p-2">${o.orderId || '-'}</td><td class="border p-2">${o.timestamp.split(' ')[0]}</td><td class="border p-2">${o.name}</td><td class="border p-2 text-xs text-gray-600 truncate max-w-[200px]">${o.items}</td><td class="border p-2 text-right">$${o.total}</td></tr>`; }); for (const [name, stats] of Object.entries(productStats)) { productsBody.innerHTML += `<tr class="border-b"><td class="border p-2">${name}</td><td class="border p-2 text-center font-bold text-blue-700">${stats.qty}</td><td class="border p-2 text-right">$${stats.amount}</td></tr>`; } document.getElementById('summary-grand-total').textContent = `NT$ ${grandTotal}`; document.getElementById('summary-order-count').textContent = targetOrders.length; document.getElementById('print-summary-container').classList.add('active-print'); window.print(); document.getElementById('print-summary-container').classList.remove('active-print'); }
+        function printOrder(orderId) { 
+            const order = orders.find(o => o.orderId === orderId) || orders.find(o => o.timestamp === orderId); 
+            if (!order) { showToast("找不到訂單"); return; } 
+            document.getElementById('inv-id').textContent = order.orderId || '舊資料無編號'; 
+            document.getElementById('inv-date').textContent = order.timestamp; 
+            document.getElementById('inv-name').textContent = order.name; 
+            document.getElementById('inv-phone').textContent = order.phone; 
+            document.getElementById('inv-address').textContent = order.address; 
+            
+            // Show Member Real Name alongside Username if available
+            let memberDisplay = order.member;
+            if(order.memberName) memberDisplay += ` (${order.memberName})`;
+            document.getElementById('inv-member').textContent = memberDisplay; 
+            
+            document.getElementById('inv-total').textContent = `NT$ ${order.total}`; 
+            const tbody = document.getElementById('inv-items-body'); 
+            tbody.innerHTML = ''; 
+            if (order.itemsDetail && Array.isArray(order.itemsDetail)) { order.itemsDetail.forEach(item => { tbody.innerHTML += `<tr class="border-b border-gray-300"><td class="py-2 pl-2">${item.name}</td><td class="py-2 text-center">$${item.price}</td><td class="py-2 text-center">${item.qty}</td><td class="py-2 text-right pr-2">$${item.subtotal}</td></tr>`; }); } else { const itemsStr = order.items.split(', '); itemsStr.forEach(str => { const parts = str.split(' x'); tbody.innerHTML += `<tr class="border-b border-gray-300"><td class="py-2 pl-2">${parts[0]}</td><td class="py-2 text-center">-</td><td class="py-2 text-center">${parts[1]}</td><td class="py-2 text-right pr-2">-</td></tr>`; }); } document.getElementById('print-invoice-container').classList.add('active-print'); window.print(); document.getElementById('print-invoice-container').classList.remove('active-print'); }
+        
+        function printAllOrdersSummary() { 
+            const filterVal = document.getElementById('admin-order-period-filter').value; 
+            let targetOrders = [...orders]; 
+            let titleRange = "所有時段"; 
+            if (filterVal !== 'all') { const period = orderingPeriods.find(p => p.id == filterVal); if (period) { titleRange = `檔期：${period.name} (${period.startDate} ~ ${period.endDate})`; const start = new Date(period.startDate); const end = new Date(period.endDate); end.setHours(23, 59, 59, 999); targetOrders = targetOrders.filter(o => { let oDate = o.rawDate ? new Date(o.rawDate) : new Date(o.timestamp); return oDate >= start && oDate <= end; }); } } 
+            if(targetOrders.length === 0) { showToast("目前篩選範圍無訂單"); return; } 
+            document.getElementById('summary-print-date').textContent = new Date().toLocaleString(); 
+            document.getElementById('summary-period-range').textContent = titleRange; 
+            const ordersBody = document.getElementById('summary-orders-body'); 
+            const productsBody = document.getElementById('summary-products-body'); 
+            ordersBody.innerHTML = ''; productsBody.innerHTML = ''; let grandTotal = 0; let productStats = {}; 
+            
+            [...targetOrders].reverse().forEach(o => { 
+                grandTotal += parseInt(o.total); 
+                
+                // Name Display Logic
+                let nameDisplay = o.name;
+                if(o.memberName) nameDisplay += `<br><span class="text-xs text-gray-500">(${o.memberName})</span>`;
+                
+                if (o.itemsDetail && Array.isArray(o.itemsDetail)) { o.itemsDetail.forEach(item => { if (!productStats[item.name]) productStats[item.name] = { qty: 0, amount: 0 }; productStats[item.name].qty += parseInt(item.qty); productStats[item.name].amount += parseInt(item.subtotal); }); } else { const itemsStr = o.items.split(', '); itemsStr.forEach(str => { const parts = str.split(' x'); const name = parts[0]; const qty = parseInt(parts[1]); const productRef = products.find(p => p.name === name); const price = productRef ? productRef.price : 0; if (!productStats[name]) productStats[name] = { qty: 0, amount: 0 }; productStats[name].qty += qty; productStats[name].amount += (qty * price); }); } 
+                ordersBody.innerHTML += `<tr class="border-b"><td class="border p-2">${o.orderId || '-'}</td><td class="border p-2">${o.timestamp.split(' ')[0]}</td><td class="border p-2 leading-tight">${nameDisplay}</td><td class="border p-2 text-xs text-gray-600 truncate max-w-[200px]">${o.items}</td><td class="border p-2 text-right">$${o.total}</td></tr>`; }); 
+                
+            for (const [name, stats] of Object.entries(productStats)) { productsBody.innerHTML += `<tr class="border-b"><td class="border p-2">${name}</td><td class="border p-2 text-center font-bold text-blue-700">${stats.qty}</td><td class="border p-2 text-right">$${stats.amount}</td></tr>`; } document.getElementById('summary-grand-total').textContent = `NT$ ${grandTotal}`; document.getElementById('summary-order-count').textContent = targetOrders.length; document.getElementById('print-summary-container').classList.add('active-print'); window.print(); document.getElementById('print-summary-container').classList.remove('active-print'); 
+        }
+        
+        function exportToCSV() {
+            const filterVal = document.getElementById('admin-order-period-filter').value;
+            let targetOrders = [...orders];
+            if (filterVal !== 'all') {
+                const period = orderingPeriods.find(p => p.id == filterVal);
+                if (period) {
+                    const start = new Date(period.startDate);
+                    const end = new Date(period.endDate);
+                    end.setHours(23, 59, 59, 999);
+                    targetOrders = targetOrders.filter(o => {
+                        let oDate = o.rawDate ? new Date(o.rawDate) : new Date(o.timestamp);
+                        return oDate >= start && oDate <= end;
+                    });
+                }
+            }
+            if(targetOrders.length === 0) { showToast("無資料可匯出"); return; }
+
+            // CSV Header
+            let csvContent = "\uFEFF"; // BOM
+            csvContent += "訂單編號,下單日期,收件人姓名,會員姓名,會員帳號,聯絡電話,配送地址,總金額,商品內容\n";
+
+            targetOrders.forEach(o => {
+                let items = o.items.replace(/,/g, '、'); // Replace commas in items to avoid CSV break
+                let row = [
+                    o.orderId || '',
+                    o.timestamp,
+                    o.name,
+                    o.memberName || '', // New Field
+                    o.member,
+                    o.phone,
+                    o.address.replace(/,/g, ' '),
+                    o.total,
+                    items
+                ];
+                csvContent += row.join(",") + "\n";
+            });
+
+            const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `orders_export_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
         function showToast(m){ const d=document.createElement('div'); d.className='fixed bottom-4 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-full shadow-lg z-[90]'; d.textContent=m; document.body.appendChild(d); setTimeout(()=>d.remove(),2000); }
         function showModal(t,c,y){ document.getElementById('msg-title').textContent=t; document.getElementById('msg-content').innerHTML=c; document.getElementById('message-modal').classList.remove('hidden'); }
         function closeMessageModal(){ document.getElementById('message-modal').classList.add('hidden'); }
@@ -683,13 +898,13 @@
         // --- v3.6 核心修改：會員與權限函式 ---
         function toggleLoginModal(){ document.getElementById('login-modal').classList.toggle('hidden'); switchAuthView('login'); }
         function switchAuthView(view){ document.getElementById('login-form-view').classList.toggle('hidden', view !== 'login'); document.getElementById('register-form-view').classList.toggle('hidden', view !== 'register'); document.getElementById('forgot-password-view').classList.toggle('hidden', view !== 'forgot'); }
-        function handleLogin(e){ e.preventDefault(); const f=e.target; const u=users.find(x=>x.username===f.username.value && x.password===f.password.value); if(u){ currentUser=u; sessionStorage.setItem('cny_current_user',JSON.stringify(u)); checkLoginStatus(); toggleLoginModal(); if(!u.isVerified) showModal("提示", "您的帳號尚未驗證。<br>請輸入驗證碼以啟用帳號。<br><br><button onclick='openVerificationModal(); closeMessageModal()' class='bg-blue-600 text-white px-3 py-1 rounded text-sm'>輸入驗證碼</button>", "info"); else showToast(`歡迎 ${u.username}`); } else showModal("錯誤","登入失敗","error"); }
-        async function handleRegister(e){ e.preventDefault(); const f=e.target; if(users.find(x=>x.username===f.reg_username.value)){ showModal("錯誤","帳號重複","error"); return; } const nu={username:f.reg_username.value, password:f.reg_password.value, email:f.reg_email.value, phone:f.reg_phone.value, address:f.reg_address.value, role:'member', joined:new Date().toLocaleDateString(), isVerified: false, purchaseCount: 0, level: '一般會員', otp: null}; 
+        function handleLogin(e){ e.preventDefault(); const f=e.target; const u=users.find(x=>x.username===f.username.value && x.password===f.password.value); if(u){ currentUser=u; sessionStorage.setItem('cny_current_user',JSON.stringify(u)); checkLoginStatus(); toggleLoginModal(); if(!u.isVerified) showModal("提示", "您的帳號尚未驗證。<br>請輸入驗證碼以啟用帳號。<br><br><button onclick='openVerificationModal(); closeMessageModal()' class='bg-blue-600 text-white px-3 py-1 rounded text-sm'>輸入驗證碼</button>", "info"); else showToast(`歡迎 ${u.name || u.username}`); } else showModal("錯誤","登入失敗","error"); }
+        async function handleRegister(e){ e.preventDefault(); const f=e.target; if(users.find(x=>x.username===f.reg_username.value)){ showModal("錯誤","帳號重複","error"); return; } const nu={username:f.reg_username.value, password:f.reg_password.value, name:f.reg_name.value, email:f.reg_email.value, phone:f.reg_phone.value, address:f.reg_address.value, role:'member', joined:new Date().toLocaleDateString(), isVerified: false, purchaseCount: 0, level: '一般會員', otp: null}; 
             await addDoc(collection(db, BASE_PATH, 'users'), nu);
             currentUser=nu; sessionStorage.setItem('cny_current_user',JSON.stringify(nu)); sendOTP(nu); checkLoginStatus(); toggleLoginModal(); setTimeout(() => openVerificationModal(), 500); }
         function handleForgotPassword(e){ e.preventDefault(); const f=e.target; const u=users.find(x=>x.username===f.forgot_username.value && x.email===f.forgot_email.value); if(u){ showModal("成功",`密碼: ${u.password}`,"success"); switchAuthView('login'); } else showModal("失敗","資訊不符","error"); }
         function logout(){ currentUser=null; sessionStorage.removeItem('cny_current_user'); checkLoginStatus(); toggleAdminPanel(false); showToast("已登出"); }
-        function checkLoginStatus(){ const ua=document.getElementById('user-status-area'); const lb=document.getElementById('login-btn'); const gr=document.getElementById('user-greeting'); const ae=document.getElementById('admin-entry-btn'); const badge=document.getElementById('verify-badge-btn'); const levelBadge=document.getElementById('user-level-badge'); if(currentUser){ ua.classList.remove('hidden'); lb.classList.add('hidden'); gr.textContent=`${currentUser.username}`; let lvClass = 'bg-gray-500'; if(currentUser.level === '銀牌會員') lvClass = 'bg-level-silver'; if(currentUser.level === '金牌會員') lvClass = 'bg-level-gold text-black'; if(currentUser.role === 'admin') lvClass = 'bg-purple-600'; levelBadge.className = `text-xs text-white px-2 py-0.5 rounded ${lvClass}`; levelBadge.textContent = currentUser.role === 'admin' ? 'Admin' : currentUser.level; if(!currentUser.isVerified){ badge.classList.remove('hidden'); gr.classList.add('text-gray-400'); } else { badge.classList.add('hidden'); gr.classList.remove('text-gray-400'); } if(currentUser.role==='admin') ae.classList.remove('hidden'); else ae.classList.add('hidden'); } else { ua.classList.add('hidden'); lb.classList.remove('hidden'); ae.classList.add('hidden'); } }
+        function checkLoginStatus(){ const ua=document.getElementById('user-status-area'); const lb=document.getElementById('login-btn'); const gr=document.getElementById('user-greeting'); const ae=document.getElementById('admin-entry-btn'); const badge=document.getElementById('verify-badge-btn'); const levelBadge=document.getElementById('user-level-badge'); if(currentUser){ ua.classList.remove('hidden'); lb.classList.add('hidden'); gr.textContent=`${currentUser.name || currentUser.username}`; let lvClass = 'bg-gray-500'; if(currentUser.level === '銀牌會員') lvClass = 'bg-level-silver'; if(currentUser.level === '金牌會員') lvClass = 'bg-level-gold text-black'; if(currentUser.role === 'admin') lvClass = 'bg-purple-600'; levelBadge.className = `text-xs text-white px-2 py-0.5 rounded ${lvClass}`; levelBadge.textContent = currentUser.role === 'admin' ? 'Admin' : currentUser.level; if(!currentUser.isVerified){ badge.classList.remove('hidden'); gr.classList.add('text-gray-400'); } else { badge.classList.add('hidden'); gr.classList.remove('text-gray-400'); } if(currentUser.role==='admin') ae.classList.remove('hidden'); else ae.classList.add('hidden'); } else { ua.classList.add('hidden'); lb.classList.remove('hidden'); ae.classList.add('hidden'); } }
         function openEmailSimulation(){ document.getElementById('email-verify-modal').classList.remove('hidden'); }
         function closeEmailSimulation(){ document.getElementById('email-verify-modal').classList.add('hidden'); }
         async function verifyAccount(){ if(!currentUser)return; const u=users.find(u=>u.username===currentUser.username); if(u){ await updateDoc(doc(db, BASE_PATH, 'users', u._docId), {isVerified:true}); checkLoginStatus(); closeEmailSimulation(); showModal("成功","驗證完成","success"); } }
