@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>福氣滿滿 - 精選年貨訂購系統 v3.7 (新增刪除訂單功能)</title>
+    <title>福氣滿滿 - 精選年貨訂購系統 v3.8 (GitHub部署修復版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <!-- 移除 EmailJS，改用 GAS -->
     
     <script>
         tailwind.config = {
@@ -54,19 +54,25 @@
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
             <div class="flex items-center gap-2">
                 <i class="fa-solid fa-dragon text-2xl text-cny-gold animate-pulse"></i>
-                <h1 class="text-xl md:text-2xl font-bold tracking-wide">福氣年貨 <span class="text-xs bg-cny-gold text-cny-red px-1 rounded ml-1">v3.7</span></h1>
+                <h1 class="text-xl md:text-2xl font-bold tracking-wide">福氣年貨 <span class="text-xs bg-cny-gold text-cny-red px-1 rounded ml-1">v3.8</span></h1>
             </div>
+            
             <div class="flex items-center gap-4">
                 <div id="user-status-area" class="hidden md:flex items-center gap-2 text-sm">
                     <div id="user-greeting-container" class="flex flex-col md:flex-row md:items-center items-end text-right md:text-left">
                         <span id="user-level-badge" class="mr-1"></span>
                         <span id="user-greeting" class="font-bold mr-1"></span>
-                        <button id="verify-badge-btn" onclick="openVerificationModal()" class="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full hover:bg-red-700 animate-pulse hidden ml-1 shadow-lg border border-white" title="點擊輸入驗證碼"><i class="fa-solid fa-envelope mr-1"></i>輸入驗證碼</button>
+                        <button id="verify-badge-btn" onclick="openVerificationModal()" class="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full hover:bg-red-700 animate-pulse hidden ml-1 shadow-lg border border-white" title="點擊輸入驗證碼">
+                            <i class="fa-solid fa-envelope mr-1"></i>輸入驗證碼
+                        </button>
                     </div>
                     <button onclick="logout()" class="text-gray-200 hover:text-white underline text-xs whitespace-nowrap ml-2">登出</button>
                 </div>
+
                 <div class="flex gap-2">
-                    <button id="login-btn" onclick="toggleLoginModal()" class="p-2 hover:bg-white/20 rounded-full transition duration-300"><i class="fa-solid fa-user text-xl"></i></button>
+                    <button id="login-btn" onclick="toggleLoginModal()" class="p-2 hover:bg-white/20 rounded-full transition duration-300">
+                        <i class="fa-solid fa-user text-xl"></i>
+                    </button>
                     <button onclick="toggleCart()" class="relative p-2 hover:bg-white/20 rounded-full transition duration-300">
                         <i class="fa-solid fa-cart-shopping text-xl"></i>
                         <span id="cart-count" class="absolute -top-1 -right-1 bg-cny-gold text-red-900 text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full animate-bounce" style="display: none;">0</span>
@@ -102,6 +108,9 @@
     </footer>
 
     <!-- Templates & Modals -->
+    <!-- (模版與 Modal 結構與 v3.7 相同，省略重複部分以節省長度，功能由 JS 驅動) -->
+    <!-- 為確保功能完整，以下是關鍵 Modal 結構 -->
+    
     <div id="print-invoice-container" class="print-container">
         <div class="max-w-3xl mx-auto border-2 border-gray-800 p-8">
             <div class="flex justify-between items-center border-b-2 border-gray-800 pb-4 mb-6"><div><h1 class="text-3xl font-bold text-gray-800">訂購單 Invoice</h1><p class="text-sm text-gray-600 mt-1">福氣年貨市集</p></div><div class="text-right"><div class="text-4xl text-cny-red"><i class="fa-solid fa-dragon"></i></div></div></div>
@@ -109,7 +118,6 @@
             <table class="w-full text-sm mb-6 border-collapse"><thead><tr class="bg-gray-100 border-y-2 border-gray-800"><th class="py-2 text-left pl-2">品項</th><th class="py-2 text-center">單價</th><th class="py-2 text-center">數量</th><th class="py-2 text-right pr-2">小計</th></tr></thead><tbody id="inv-items-body"></tbody><tfoot><tr class="border-t-2 border-gray-800 font-bold text-lg"><td colspan="3" class="py-3 text-right pr-4">總金額：</td><td class="py-3 text-right pr-2 text-cny-red" id="inv-total"></td></tr></tfoot></table>
         </div>
     </div>
-    
     <div id="print-summary-container" class="print-container">
         <div class="max-w-4xl mx-auto p-4">
             <div class="text-center mb-6"><h1 class="text-2xl font-bold">銷售總表 Summary Report</h1><p class="text-sm text-gray-500">列印時間：<span id="summary-print-date"></span></p><p class="text-sm font-bold text-blue-700 mt-1" id="summary-period-range"></p></div>
@@ -117,41 +125,14 @@
             <h3 class="font-bold border-l-4 border-gray-800 pl-2 mb-2">二、商品銷售統計</h3><div class="flex justify-between items-start gap-8"><table class="w-full text-sm border border-gray-300 flex-1"><thead><tr class="bg-gray-200"><th class="border p-2">商品名稱</th><th class="border p-2 text-center">總銷售數</th><th class="border p-2 text-right">銷售總額</th></tr></thead><tbody id="summary-products-body"></tbody></table><div class="w-64 bg-gray-50 p-4 border border-gray-300 rounded"><h4 class="font-bold text-lg mb-2 text-center border-b pb-2">時段總營收</h4><p class="text-3xl font-bold text-center text-cny-red mt-2" id="summary-grand-total">NT$ 0</p><p class="text-center text-xs text-gray-500 mt-2">共 <span id="summary-order-count">0</span> 筆訂單</p></div></div>
         </div>
     </div>
-
+    
     <div id="cart-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex justify-end transition-opacity duration-300"><div class="bg-white w-full max-w-md h-full shadow-2xl flex flex-col transform transition-transform duration-300 translate-x-full" id="cart-panel"><div class="p-4 bg-cny-red text-white flex justify-between items-center shadow"><h3 class="text-lg font-bold"><i class="fa-solid fa-list-check mr-2"></i>您的購物清單</h3><button onclick="toggleCart()" class="text-white hover:text-cny-gold text-xl transition"><i class="fa-solid fa-times"></i></button></div><div id="cart-items" class="flex-grow overflow-y-auto p-4 space-y-4"></div><div class="p-4 bg-gray-50 border-t"><div class="flex justify-between items-center mb-4 text-xl font-bold text-cny-red"><span>總金額：</span><span id="cart-total">NT$ 0</span></div><button onclick="showCheckout()" class="w-full bg-cny-red hover:bg-cny-dark-red text-white font-bold py-3 px-4 rounded shadow transition duration-200">前往結帳</button></div></div></div>
     <div id="checkout-modal" class="fixed inset-0 bg-black bg-opacity-60 z-[60] hidden flex items-center justify-center p-4"><div class="bg-white rounded-lg shadow-2xl w-full max-w-lg p-6 animate-fade-in relative"><button onclick="closeCheckout()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"><i class="fa-solid fa-times text-xl"></i></button><h3 class="text-2xl font-bold text-cny-red mb-6 border-b pb-2">訂購資訊填寫</h3><div id="checkout-member-hint" class="hidden mb-4 p-2 bg-blue-50 text-blue-700 text-sm rounded border border-blue-200 flex items-center"><i class="fa-solid fa-circle-info mr-2"></i><span>已自動帶入您的會員資料</span></div><form id="order-form" onsubmit="submitOrder(event)" class="space-y-4"><div><label class="block text-gray-700 font-bold mb-1">收件人姓名</label><input type="text" name="name" required class="w-full border border-gray-300 rounded px-3 py-2"></div><div><label class="block text-gray-700 font-bold mb-1">聯絡電話</label><input type="tel" name="phone" required pattern="[0-9]{10}" class="w-full border border-gray-300 rounded px-3 py-2"></div><div><label class="block text-gray-700 font-bold mb-1">配送地址</label><textarea name="address" required class="w-full border border-gray-300 rounded px-3 py-2" rows="3"></textarea></div><div class="pt-4"><button type="submit" class="w-full bg-cny-gold hover:bg-yellow-600 text-white font-bold py-3 px-4 rounded shadow">確認送出訂單</button></div></form></div></div>
-    <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-60 z-[70] hidden flex items-center justify-center p-4"><div class="bg-white rounded-lg shadow-2xl w-full max-w-md p-6 relative animate-fade-in max-h-[90vh] overflow-y-auto custom-scrollbar"><button onclick="toggleLoginModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-times text-xl"></i></button><div id="login-form-view"><h3 class="text-xl font-bold text-center text-gray-800 mb-6">會員登入</h3><form onsubmit="handleLogin(event)" class="space-y-4"><div><label class="block text-sm text-gray-600 mb-1">帳號</label><input type="text" name="username" required class="w-full border p-2 rounded"></div><div><label class="block text-sm text-gray-600 mb-1">密碼</label><input type="password" name="password" required class="w-full border p-2 rounded"></div><button type="submit" class="w-full bg-cny-red text-white font-bold py-2 rounded">登入</button></form><div class="flex justify-between items-center mt-4 text-sm"><button onclick="switchAuthView('forgot')" class="text-gray-500 hover:underline">忘記密碼？</button><span class="text-gray-400">|</span><button onclick="switchAuthView('register')" class="text-blue-600 hover:underline">註冊新帳號</button></div></div><div id="register-form-view" class="hidden"><h3 class="text-xl font-bold text-center text-gray-800 mb-4">註冊新會員</h3><form onsubmit="handleRegister(event)" class="space-y-3"><div class="grid grid-cols-2 gap-3"><div><label class="block text-sm text-gray-600 mb-1">帳號</label><input type="text" name="reg_username" required class="w-full border p-2 rounded"></div><div><label class="block text-sm text-gray-600 mb-1">密碼</label><input type="password" name="reg_password" required class="w-full border p-2 rounded"></div></div><div><label class="block text-sm text-gray-600 mb-1">Email</label><input type="email" name="reg_email" required class="w-full border p-2 rounded"></div><div><label class="block text-sm text-gray-600 mb-1">電話</label><input type="tel" name="reg_phone" required class="w-full border p-2 rounded"></div><div><label class="block text-sm text-gray-600 mb-1">地址</label><input type="text" name="reg_address" required class="w-full border p-2 rounded"></div><button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded">註冊</button><p class="text-xs text-gray-500 text-center mt-2" id="reg-status-hint">* 將透過 Google Mail 發送驗證碼 (請確認後台設定)</p></form><p class="text-center text-sm mt-4"><button onclick="switchAuthView('login')" class="text-blue-600 hover:underline">返回登入</button></p></div><div id="forgot-password-view" class="hidden"><h3 class="text-xl font-bold text-center text-gray-800 mb-4">找回密碼</h3><form onsubmit="handleForgotPassword(event)" class="space-y-4"><div><label class="block text-sm text-gray-600 mb-1">帳號</label><input type="text" name="forgot_username" required class="w-full border p-2 rounded"></div><div><label class="block text-sm text-gray-600 mb-1">Email</label><input type="email" name="forgot_email" required class="w-full border p-2 rounded"></div><button type="submit" class="w-full bg-cny-gold text-white font-bold py-2 rounded">取回密碼</button></form><p class="text-center text-sm mt-4"><button onclick="switchAuthView('login')" class="text-blue-600 hover:underline">返回登入</button></p></div></div></div>
+    <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-60 z-[70] hidden flex items-center justify-center p-4"><div class="bg-white rounded-lg shadow-2xl w-full max-w-md p-6 relative animate-fade-in max-h-[90vh] overflow-y-auto custom-scrollbar"><button onclick="toggleLoginModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-times text-xl"></i></button><div id="login-form-view"><h3 class="text-xl font-bold text-center text-gray-800 mb-6">會員登入</h3><form onsubmit="handleLogin(event)" class="space-y-4"><div><label class="block text-sm text-gray-600 mb-1">帳號</label><input type="text" name="username" required class="w-full border p-2 rounded"></div><div><label class="block text-sm text-gray-600 mb-1">密碼</label><input type="password" name="password" required class="w-full border p-2 rounded"></div><button type="submit" class="w-full bg-cny-red text-white font-bold py-2 rounded">登入</button></form><div class="flex justify-between items-center mt-4 text-sm"><button onclick="switchAuthView('forgot')" class="text-gray-500 hover:underline">忘記密碼？</button><span class="text-gray-400">|</span><button onclick="switchAuthView('register')" class="text-blue-600 hover:underline">註冊新帳號</button></div></div><div id="register-form-view" class="hidden"><h3 class="text-xl font-bold text-center text-gray-800 mb-4">註冊新會員</h3><form onsubmit="handleRegister(event)" class="space-y-3"><div class="grid grid-cols-2 gap-3"><div><label class="block text-sm text-gray-600 mb-1">帳號</label><input type="text" name="reg_username" required class="w-full border p-2 rounded"></div><div><label class="block text-sm text-gray-600 mb-1">密碼</label><input type="password" name="reg_password" required class="w-full border p-2 rounded"></div></div><div><label class="block text-sm text-gray-600 mb-1">Email</label><input type="email" name="reg_email" required class="w-full border p-2 rounded"></div><div><label class="block text-sm text-gray-600 mb-1">電話</label><input type="tel" name="reg_phone" required class="w-full border p-2 rounded"></div><div><label class="block text-sm text-gray-600 mb-1">地址</label><input type="text" name="reg_address" required class="w-full border p-2 rounded"></div><button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded">註冊</button><p class="text-xs text-gray-500 text-center mt-2" id="reg-status-hint">* 將透過 Google Mail 發送驗證碼</p></form><p class="text-center text-sm mt-4"><button onclick="switchAuthView('login')" class="text-blue-600 hover:underline">返回登入</button></p></div><div id="forgot-password-view" class="hidden"><h3 class="text-xl font-bold text-center text-gray-800 mb-4">找回密碼</h3><form onsubmit="handleForgotPassword(event)" class="space-y-4"><div><label class="block text-sm text-gray-600 mb-1">帳號</label><input type="text" name="forgot_username" required class="w-full border p-2 rounded"></div><div><label class="block text-sm text-gray-600 mb-1">Email</label><input type="email" name="forgot_email" required class="w-full border p-2 rounded"></div><button type="submit" class="w-full bg-cny-gold text-white font-bold py-2 rounded">取回密碼</button></form><p class="text-center text-sm mt-4"><button onclick="switchAuthView('login')" class="text-blue-600 hover:underline">返回登入</button></p></div></div></div>
     <div id="edit-product-modal" class="fixed inset-0 bg-black bg-opacity-60 z-[90] hidden flex items-center justify-center p-4"><div class="bg-white rounded-lg shadow-2xl w-full max-w-lg p-6 relative animate-fade-in"><button onclick="closeEditProductModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-times text-xl"></i></button><h3 class="text-xl font-bold text-gray-800 mb-4">編輯商品資訊</h3><form onsubmit="handleEditProduct(event)" class="space-y-3"><input type="hidden" name="edit_id"><div><label class="text-xs text-gray-500">名稱</label><input type="text" name="edit_name" required class="w-full border p-2 rounded"></div><div class="grid grid-cols-2 gap-3"><div><label class="text-xs text-gray-500">價格</label><input type="number" name="edit_price" required class="w-full border p-2 rounded"></div><div><label class="text-xs text-gray-500">庫存</label><input type="number" name="edit_stock" required class="w-full border p-2 rounded"></div></div><div><label class="text-xs text-gray-500">分類</label><select name="edit_category" id="edit-product-category-select" class="w-full border p-2 rounded"></select></div><div><label class="text-xs text-gray-500">圖片</label><input type="text" name="edit_image" required class="w-full border p-2 rounded"></div><div><label class="text-xs text-gray-500">描述</label><input type="text" name="edit_desc" required class="w-full border p-2 rounded"></div><button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded">儲存變更</button></form></div></div>
     <div id="edit-user-modal" class="fixed inset-0 bg-black bg-opacity-60 z-[90] hidden flex items-center justify-center p-4"><div class="bg-white rounded-lg shadow-2xl w-full max-w-lg p-6 relative animate-fade-in"><button onclick="closeEditUserModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-times text-xl"></i></button><h3 class="text-xl font-bold text-gray-800 mb-4">編輯會員資料</h3><form onsubmit="handleEditUser(event)" class="space-y-3"><div><label class="text-xs text-gray-500">帳號</label><input type="text" name="edit_u_username" readonly class="w-full border p-2 rounded bg-gray-100"></div><div><label class="text-xs text-gray-500">Email</label><input type="email" name="edit_u_email" required class="w-full border p-2 rounded"></div><div><label class="text-xs text-gray-500">電話</label><input type="tel" name="edit_u_phone" required class="w-full border p-2 rounded"></div><div><label class="text-xs text-gray-500">地址</label><input type="text" name="edit_u_address" required class="w-full border p-2 rounded"></div><button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded">儲存變更</button></form></div></div>
+    <div id="manage-category-modal" class="fixed inset-0 bg-black bg-opacity-60 z-[95] hidden flex items-center justify-center p-4"><div class="bg-white rounded-lg shadow-2xl w-full max-w-md p-6 relative animate-fade-in"><button onclick="closeCategoryModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-times text-xl"></i></button><h3 class="text-xl font-bold text-gray-800 mb-4">商品分類管理</h3><div class="mb-4 bg-gray-50 p-3 rounded border"><h5 class="text-sm font-bold text-gray-700 mb-2">新增分類</h5><form onsubmit="handleAddCategory(event)" class="flex gap-2"><input type="text" name="new_cat_name" placeholder="名稱 (如: 伴手禮)" required class="flex-1 border p-2 rounded text-sm"><input type="text" name="new_cat_id" placeholder="代碼 (如: gift)" required class="w-24 border p-2 rounded text-sm"><button type="submit" class="bg-green-600 text-white px-3 rounded text-sm hover:bg-green-700">新增</button></form></div><div class="max-h-60 overflow-y-auto custom-scrollbar"><table class="w-full text-sm text-left"><thead class="bg-gray-100 text-gray-600"><tr><th class="p-2">名稱</th><th class="p-2">代碼</th><th class="p-2 text-right">操作</th></tr></thead><tbody id="category-list-body"></tbody></table></div></div></div>
 
-    <div id="manage-category-modal" class="fixed inset-0 bg-black bg-opacity-60 z-[95] hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-lg shadow-2xl w-full max-w-md p-6 relative animate-fade-in">
-            <button onclick="closeCategoryModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-times text-xl"></i></button>
-            <h3 class="text-xl font-bold text-gray-800 mb-4">商品分類管理</h3>
-            
-            <div class="mb-4 bg-gray-50 p-3 rounded border">
-                <h5 class="text-sm font-bold text-gray-700 mb-2">新增分類</h5>
-                <form onsubmit="handleAddCategory(event)" class="flex gap-2">
-                    <input type="text" name="new_cat_name" placeholder="名稱 (如: 伴手禮)" required class="flex-1 border p-2 rounded text-sm">
-                    <input type="text" name="new_cat_id" placeholder="代碼 (如: gift)" required class="w-24 border p-2 rounded text-sm">
-                    <button type="submit" class="bg-green-600 text-white px-3 rounded text-sm hover:bg-green-700">新增</button>
-                </form>
-            </div>
-
-            <div class="max-h-60 overflow-y-auto custom-scrollbar">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-gray-100 text-gray-600">
-                        <tr><th class="p-2">名稱</th><th class="p-2">代碼</th><th class="p-2 text-right">操作</th></tr>
-                    </thead>
-                    <tbody id="category-list-body">
-                        <!-- JS Render -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Admin Modal -->
     <div id="admin-modal" class="fixed inset-0 bg-black bg-opacity-60 z-[80] hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-lg shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col relative animate-fade-in">
             <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-lg">
@@ -165,61 +146,8 @@
                 <button onclick="switchAdminTab('settings')" id="tab-settings" class="tab-btn flex-1 py-3 text-center text-gray-600 hover:bg-gray-50">系統設定</button>
             </div>
             <div class="flex-grow overflow-y-auto p-6 bg-gray-50">
-                <div id="view-orders" class="admin-view">
-                    <div class="bg-white p-4 rounded shadow mb-4">
-                        <div class="flex justify-between items-center mb-4">
-                            <div class="flex items-center gap-3">
-                                <h4 class="font-bold text-lg">訂單列表</h4>
-                                <select id="admin-order-period-filter" onchange="renderAdminOrders()" class="text-sm border border-gray-300 rounded p-1"><option value="all">全部時段</option></select>
-                            </div>
-                            <div class="flex gap-2">
-                                <button onclick="printAllOrdersSummary()" class="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 text-sm flex items-center"><i class="fa-solid fa-file-invoice-dollar mr-1"></i> 總表</button>
-                                <button onclick="exportToCSV()" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm flex items-center"><i class="fa-solid fa-download mr-1"></i> CSV</button>
-                            </div>
-                        </div>
-                        <div class="text-xs text-gray-500 mb-2">顯示: <span id="admin-order-count">0</span> 筆</div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm text-left">
-                                <thead class="bg-gray-100 border-b"><tr><th class="p-2">訂單號</th><th class="p-2">日期</th><th class="p-2">姓名</th><th class="p-2">金額</th><th class="p-2">操作</th></tr></thead>
-                                <tbody id="admin-order-list"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="bg-white p-4 rounded shadow"><h4 class="font-bold text-gray-700 mb-2">Google Sheet / Mail 同步</h4><div class="flex gap-2"><input type="text" id="admin-sheet-url" placeholder="Google Script URL" class="flex-grow border p-2 rounded text-sm"><button onclick="saveSheetUrl()" class="bg-blue-600 text-white px-4 rounded text-sm">儲存</button></div><p class="text-xs text-gray-500 mt-1" id="sheet-status-text">未設定</p></div>
-                </div>
-                
-                <!-- 商品管理 (v3.6 更新) -->
-                <div id="view-products" class="admin-view hidden">
-                    <div class="bg-white p-4 rounded shadow mb-4">
-                        <div class="flex justify-between items-center mb-4">
-                            <h4 class="font-bold text-lg">商品管理</h4>
-                            <!-- 新增：分類管理按鈕 -->
-                            <button onclick="openCategoryModal()" class="bg-orange-600 text-white px-3 py-1.5 rounded text-sm hover:bg-orange-700 flex items-center">
-                                <i class="fa-solid fa-folder-open mr-2"></i>分類管理
-                            </button>
-                        </div>
-
-                        <div class="flex gap-2 mb-4 p-3 bg-green-50 border border-green-200 rounded">
-                            <button onclick="downloadProductTemplate()" class="bg-gray-600 text-white px-3 py-2 rounded text-sm"><i class="fa-solid fa-file-csv mr-2"></i>下載範本</button>
-                            <button onclick="document.getElementById('product-import-input').click()" class="bg-green-600 text-white px-3 py-2 rounded text-sm"><i class="fa-solid fa-upload mr-2"></i>匯入CSV</button>
-                            <input type="file" id="product-import-input" hidden accept=".csv" onchange="handleProductImport(this)">
-                            <div class="text-xs text-green-700 mt-2 ml-2"><i class="fa-solid fa-circle-info mr-1"></i>請使用 "CSV UTF-8 (逗號分隔)" 格式存檔</div>
-                        </div>
-
-                        <form onsubmit="handleAddProduct(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
-                            <input type="text" name="p_name" placeholder="名稱" required class="border p-2 rounded">
-                            <input type="number" name="p_price" placeholder="價格" required class="border p-2 rounded">
-                            <!-- 動態分類選單 -->
-                            <select name="p_category" id="add-product-category-select" class="border p-2 rounded"></select>
-                            <input type="text" name="p_image" placeholder="圖片URL" required class="border p-2 rounded">
-                            <input type="number" name="p_stock" placeholder="庫存" required class="border p-2 rounded">
-                            <input type="text" name="p_desc" placeholder="描述" required class="col-span-1 md:col-span-2 border p-2 rounded">
-                            <button type="submit" class="col-span-1 md:col-span-2 bg-cny-red text-white py-2 rounded">新增商品</button>
-                        </form>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="admin-product-list"></div>
-                </div>
-
+                <div id="view-orders" class="admin-view"><div class="bg-white p-4 rounded shadow mb-4"><div class="flex justify-between items-center mb-4"><div class="flex items-center gap-3"><h4 class="font-bold text-lg">訂單列表</h4><select id="admin-order-period-filter" onchange="renderAdminOrders()" class="text-sm border border-gray-300 rounded p-1"><option value="all">全部時段</option></select></div><div class="flex gap-2"><button onclick="printAllOrdersSummary()" class="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 text-sm flex items-center"><i class="fa-solid fa-file-invoice-dollar mr-1"></i> 總表</button><button onclick="exportToCSV()" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm flex items-center"><i class="fa-solid fa-download mr-1"></i> CSV</button></div></div><div class="text-xs text-gray-500 mb-2">顯示: <span id="admin-order-count">0</span> 筆</div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-gray-100 border-b"><tr><th class="p-2">訂單號</th><th class="p-2">日期</th><th class="p-2">姓名</th><th class="p-2">金額</th><th class="p-2">操作</th></tr></thead><tbody id="admin-order-list"></tbody></table></div></div><div class="bg-white p-4 rounded shadow"><h4 class="font-bold text-gray-700 mb-2">Google Sheet / Mail 同步</h4><div class="flex gap-2"><input type="text" id="admin-sheet-url" placeholder="Google Script URL" class="flex-grow border p-2 rounded text-sm"><button onclick="saveSheetUrl()" class="bg-blue-600 text-white px-4 rounded text-sm">儲存</button></div><p class="text-xs text-gray-500 mt-1" id="sheet-status-text">未設定</p></div></div>
+                <div id="view-products" class="admin-view hidden"><div class="bg-white p-4 rounded shadow mb-4"><div class="flex justify-between items-center mb-4"><h4 class="font-bold text-lg">商品管理</h4><button onclick="openCategoryModal()" class="bg-orange-600 text-white px-3 py-1.5 rounded text-sm hover:bg-orange-700 flex items-center"><i class="fa-solid fa-folder-open mr-2"></i>分類管理</button></div><div class="flex gap-2 mb-4 p-3 bg-green-50 border border-green-200 rounded"><button onclick="downloadProductTemplate()" class="bg-gray-600 text-white px-3 py-2 rounded text-sm"><i class="fa-solid fa-file-csv mr-2"></i>下載範本</button><button onclick="document.getElementById('product-import-input').click()" class="bg-green-600 text-white px-3 py-2 rounded text-sm"><i class="fa-solid fa-upload mr-2"></i>匯入CSV</button><input type="file" id="product-import-input" hidden accept=".csv" onchange="handleProductImport(this)"><div class="text-xs text-green-700 mt-2 ml-2"><i class="fa-solid fa-circle-info mr-1"></i>請使用 "CSV UTF-8" 格式存檔</div></div><form onsubmit="handleAddProduct(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4"><input type="text" name="p_name" placeholder="名稱" required class="border p-2 rounded"><input type="number" name="p_price" placeholder="價格" required class="border p-2 rounded"><select name="p_category" id="add-product-category-select" class="border p-2 rounded"></select><input type="text" name="p_image" placeholder="圖片URL" required class="border p-2 rounded"><input type="number" name="p_stock" placeholder="庫存" required class="border p-2 rounded"><input type="text" name="p_desc" placeholder="描述" required class="col-span-1 md:col-span-2 border p-2 rounded"><button type="submit" class="col-span-1 md:col-span-2 bg-cny-red text-white py-2 rounded">新增商品</button></form></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="admin-product-list"></div></div>
                 <div id="view-users" class="admin-view hidden"><div class="bg-white p-4 rounded shadow mb-4 border-l-4 border-blue-500"><h4 class="font-bold text-lg mb-4 text-blue-800">我的帳號設定</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><form onsubmit="handleUpdateEmail(event)" class="bg-blue-50 p-4 rounded border border-blue-100"><h5 class="font-bold text-sm mb-2">聯絡信箱</h5><input type="text" id="current_admin_email" class="w-full border p-2 rounded text-sm mb-2 bg-gray-100" readonly><input type="email" name="new_email" required class="w-full border p-2 rounded text-sm mb-2" placeholder="新信箱"><button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded text-sm">更新</button></form><form onsubmit="handleChangePassword(event)" class="bg-yellow-50 p-4 rounded border border-yellow-100"><h5 class="font-bold text-sm mb-2">修改密碼</h5><input type="password" name="old_pass" required class="w-full border p-2 rounded text-sm mb-2" placeholder="舊密碼"><input type="password" name="new_pass" required class="w-full border p-2 rounded text-sm mb-2" placeholder="新密碼"><button type="submit" class="w-full bg-yellow-600 text-white px-4 py-2 rounded text-sm">更新</button></form></div></div><div class="bg-white p-4 rounded shadow mb-4"><h4 class="font-bold text-lg mb-4">新增管理員</h4><form onsubmit="handleAddAdmin(event)" class="flex gap-2"><input type="text" name="new_admin_name" placeholder="帳號" required class="border p-2 rounded flex-1"><input type="password" name="new_admin_pass" placeholder="密碼" required class="border p-2 rounded flex-1"><input type="hidden" name="new_admin_email" value="admin@local"><button type="submit" class="bg-purple-600 text-white px-4 rounded">新增</button></form></div><div class="bg-white p-4 rounded shadow"><h4 class="font-bold text-gray-700 mb-2">會員列表</h4><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-gray-100 border-b"><tr><th class="p-2">帳號</th><th class="p-2">等級</th><th class="p-2">Email</th><th class="p-2">狀態</th><th class="p-2">操作</th></tr></thead><tbody id="admin-user-list"></tbody></table></div></div></div>
                 <div id="view-settings" class="admin-view hidden"><div class="bg-white p-4 rounded shadow mb-4 border-l-4 border-teal-500"><h4 class="font-bold text-lg mb-2 text-teal-800"><i class="fa-solid fa-clock mr-2"></i>開放訂購時程管理</h4><p class="text-sm text-gray-600 mb-4">設定開放訂購的日期範圍。</p><form onsubmit="handleAddPeriod(event)" class="flex gap-2 items-end mb-4 bg-teal-50 p-3 rounded"><div class="flex-1"><label class="text-xs text-gray-500 block">時段名稱</label><input type="text" name="period_name" required class="w-full border p-2 rounded text-sm"></div><div><label class="text-xs text-gray-500 block">開始日期</label><input type="date" name="period_start" required class="border p-2 rounded text-sm"></div><div><label class="text-xs text-gray-500 block">結束日期</label><input type="date" name="period_end" required class="border p-2 rounded text-sm"></div><button type="submit" class="bg-teal-600 text-white px-4 py-2 rounded text-sm hover:bg-teal-700 h-[38px]">新增</button></form><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-gray-100 border-b"><tr><th class="p-2">名稱</th><th class="p-2">開始日期</th><th class="p-2">結束日期</th><th class="p-2">狀態</th><th class="p-2">操作</th></tr></thead><tbody id="admin-period-list"></tbody></table></div></div></div>
             </div>
@@ -229,25 +157,19 @@
     <div id="verify-code-modal" class="fixed inset-0 bg-black bg-opacity-70 z-[100] hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-lg shadow-2xl w-full max-w-sm p-6 animate-fade-in relative text-center">
             <button onclick="closeVerificationModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-times text-xl"></i></button>
-            
-            <div class="mb-4 text-blue-600 text-5xl">
-                <i class="fa-solid fa-envelope-open-text"></i>
-            </div>
+            <div class="mb-4 text-blue-600 text-5xl"><i class="fa-solid fa-envelope-open-text"></i></div>
             <h3 class="text-xl font-bold text-gray-800 mb-2">輸入驗證碼</h3>
             <p class="text-sm text-gray-600 mb-4" id="otp-message">請輸入發送至您信箱的 6 位數代碼</p>
             <p class="text-xs text-red-500 mb-2 font-bold">請檢查您的垃圾郵件夾 (Spam)</p>
-            
-            <div class="mb-4">
-                <input type="text" id="otp-input" class="w-full text-center text-2xl tracking-widest border-2 border-gray-300 rounded p-2 focus:border-blue-500 focus:outline-none uppercase" maxlength="6" placeholder="000000">
-            </div>
-
-            <button onclick="verifyOTP()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded shadow transition mb-3">
-                驗證帳號
-            </button>
-            
+            <div class="mb-4"><input type="text" id="otp-input" class="w-full text-center text-2xl tracking-widest border-2 border-gray-300 rounded p-2 focus:border-blue-500 focus:outline-none uppercase" maxlength="6" placeholder="000000"></div>
+            <button onclick="verifyOTP()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded shadow transition mb-3">驗證帳號</button>
             <div class="text-xs text-gray-400">
                 <p>沒收到信？ <button onclick="resendOTP()" class="text-blue-500 hover:underline">重新發送</button></p>
-                <p class="mt-1" id="mock-otp-hint" style="display:none;">(演示模式：您的驗證碼是 <span id="mock-otp-code" class="font-bold text-red-500"></span>)</p>
+                <div class="mt-2 p-2 bg-gray-50 border rounded text-gray-500 text-left" id="mock-otp-hint" style="display:none;">
+                    <p class="font-bold border-b pb-1 mb-1">演示模式 / 救援連結</p>
+                    <p>若 Google 服務暫時無法使用，請使用此測試碼：</p>
+                    <p class="text-center text-xl text-red-600 font-bold mt-1" id="mock-otp-code"></p>
+                </div>
             </div>
         </div>
     </div>
@@ -290,7 +212,7 @@
 
         let orders = JSON.parse(localStorage.getItem('cny_orders')) || [];
         let orderingPeriods = JSON.parse(localStorage.getItem('cny_periods')) || [];
-        let googleSheetUrl = "https://script.google.com/macros/s/AKfycbz6P66B3rg_NCwk89u026uHhGxy7c7DEm1Oe9xpdwlj5-j3foWuozRQaVCz7SgdwWDR/exec";
+        let googleSheetUrl = "https://script.google.com/macros/s/AKfycbyqN3uBYRAyZSoI3RRrphV-CKKYG47XO8GbVqX8IO7Pj86o3t4tSuR89gewpvAMfGfHiA/exec";
         let currentUser = JSON.parse(sessionStorage.getItem('cny_current_user')) || null;
         let cart = {}; 
         let currentFilter = 'all';
@@ -422,16 +344,19 @@
         function calculateLevel(count) { if (count >= 6) return '金牌會員'; if (count >= 3) return '銀牌會員'; return '一般會員'; }
         function adjustCardQty(id, delta) { const input = document.getElementById(`qty-input-${id}`); const p = products.find(x => x.id === id); let v = parseInt(input.value) + delta; if(v < 1) v = 1; if(v > p.stock) { v = p.stock; showToast("已達庫存上限"); } input.value = v; }
         function changeQty(id, delta) { const p = products.find(x => x.id == id); const c = cart[id]; if(delta>0 && c+delta > p.stock) { showToast("庫存不足"); return; } if(c+delta<=0) delete cart[id]; else cart[id] += delta; updateCartUI(); }
+        
         function addToCart(id) { 
             if (currentUser && !currentUser.isVerified) { showModal("權限受限", "帳號未驗證，無法購物。<br><button onclick='openVerificationModal(); closeMessageModal()' class='bg-blue-600 text-white px-3 py-1 rounded text-sm mt-2'>前往驗證</button>", "error"); return; }
             const periodStatus = checkOrderingStatus(); if (!periodStatus.isOpen) { showModal("非訂購期間", `抱歉，${periodStatus.message}。`, "error"); return; }
             const input = document.getElementById(`qty-input-${id}`); const qty = parseInt(input.value)||1; const p = products.find(x => x.id === id); if(!p) return; const c = cart[id]||0; if(c + qty > p.stock){ showModal("庫存不足", "無法加入", "error"); return; } cart[id] = c + qty; updateCartUI(); showToast(`已加入 ${qty} 件`); input.value = 1; 
         }
+        
         function updateCartUI() { 
             const el = document.getElementById('cart-items'); const countEl = document.getElementById('cart-count'); const totalEl = document.getElementById('cart-total'); let total = 0; let count = 0; let itemsHtml = ''; 
             for (const [id, q] of Object.entries(cart)) { const p = products.find(x => x.id == id); if (p) { total += p.price * q; count += q; itemsHtml += `<div class="flex justify-between items-center bg-gray-50 p-2 border mb-2"><div class="flex gap-2"><img src="${p.image}" class="w-10 h-10 rounded"><div><p class="font-bold text-sm">${p.name}</p><p class="text-xs text-red-500">${p.price} x ${q}</p></div></div><div class="flex gap-1"><button onclick="changeQty(${id},-1)" class="w-6 bg-gray-200 rounded">-</button><span class="w-4 text-center font-bold text-sm">${q}</span><button onclick="changeQty(${id},1)" class="w-6 bg-gray-200 rounded">+</button></div></div>`; } } 
             totalEl.textContent = `NT$ ${total}`; countEl.textContent = count; if (count > 0) { el.innerHTML = itemsHtml; countEl.style.display = 'flex'; } else { el.innerHTML = `<div class="text-center text-gray-500 mt-10" id="empty-cart-msg"><i class="fa-solid fa-basket-shopping text-4xl mb-2 opacity-50"></i><p>購物車還是空的，快去選購年貨吧！</p></div>`; countEl.style.display = 'none'; } 
         }
+        
         function toggleCart(){ const m=document.getElementById('cart-modal'); const p=document.getElementById('cart-panel'); if(m.classList.contains('hidden')){ m.classList.remove('hidden'); setTimeout(()=>p.classList.remove('translate-x-full'),10); }else{ p.classList.add('translate-x-full'); setTimeout(()=>m.classList.add('hidden'),300); } }
         function showCheckout(){ if(Object.keys(cart).length===0){ showModal("提示","空車","info"); return; } if(currentUser && !currentUser.isVerified){ showModal("受限","請先驗證帳號","error"); return; } toggleCart(); document.getElementById('checkout-modal').classList.remove('hidden'); const f=document.getElementById('order-form'); if(currentUser){ f.name.value=currentUser.username; f.phone.value=currentUser.phone||''; f.address.value=currentUser.address||''; document.getElementById('checkout-member-hint').classList.remove('hidden'); } else { f.reset(); document.getElementById('checkout-member-hint').classList.add('hidden'); } }
         function closeCheckout(){ document.getElementById('checkout-modal').classList.add('hidden'); }
@@ -445,7 +370,7 @@
             try{
                 orders.push(ord); if(currentUser && currentUser.role !== 'admin') { const idx = users.findIndex(u => u.username === currentUser.username); if(idx !== -1) { users[idx].purchaseCount = (users[idx].purchaseCount || 0) + 1; users[idx].level = calculateLevel(users[idx].purchaseCount); currentUser = users[idx]; sessionStorage.setItem('cny_current_user', JSON.stringify(currentUser)); } }
                 saveData(); checkLoginStatus(); if(currentUser?.role==='admin') renderAdminOrders();
-                if(googleSheetUrl.length>10) { const orderPayload = { ...ord, action: 'create_order' }; await fetch(googleSheetUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(orderPayload)}); } else await new Promise(r=>setTimeout(r,800));
+                if(googleSheetUrl.length>10) { const orderPayload = { ...ord, action: 'create_order' }; await fetch(googleSheetUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(orderPayload), referrerPolicy: 'no-referrer'}); } else await new Promise(r=>setTimeout(r,800));
                 showModal('成功',`訂單已送出<br>單號：${orderId}<br>金額: ${total}`,'success'); cart={}; updateCartUI(); e.target.reset(); closeCheckout();
             }catch(err){ console.error(err); showModal("錯誤","失敗","error"); }finally{ btn.innerHTML=old; btn.disabled=false; }
         }
@@ -468,7 +393,6 @@
         function toggleAdminPanel(f){ const m=document.getElementById('admin-modal'); if(f===false) m.classList.add('hidden'); else m.classList.toggle('hidden'); }
         function switchAdminTab(t){ document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); document.getElementById(`tab-${t}`).classList.add('active'); document.querySelectorAll('.admin-view').forEach(v=>v.classList.add('hidden')); document.getElementById(`view-${t}`).classList.remove('hidden'); if(t==='users') renderAdminProfile(); if(t==='settings') renderAdminPeriods(); }
         
-        // v3.7 刪除訂單
         function handleDeleteOrder(id) {
             if(!confirm("確定要刪除此筆訂單嗎？此動作無法復原。")) return;
             orders = orders.filter(o => (o.orderId !== id && o.timestamp !== id));
@@ -560,7 +484,7 @@
         function closeEmailSimulation(){ document.getElementById('email-verify-modal').classList.add('hidden'); }
         function verifyAccount(){ if(!currentUser)return; const i=users.findIndex(u=>u.username===currentUser.username); if(i!==-1){ users[i].isVerified=true; currentUser.isVerified=true; saveData(); sessionStorage.setItem('cny_current_user',JSON.stringify(currentUser)); checkLoginStatus(); closeEmailSimulation(); showModal("成功","驗證完成","success"); } }
         function generateOTP() { return Math.floor(100000 + Math.random() * 900000).toString(); }
-        function sendOTP(user) { const otp = generateOTP(); const idx = users.findIndex(u => u.username === user.username); if (idx !== -1) { users[idx].otp = otp; saveData(); if (currentUser && currentUser.username === user.username) { currentUser.otp = otp; sessionStorage.setItem('cny_current_user', JSON.stringify(currentUser)); } } const mockHint = document.getElementById('mock-otp-hint'); const mockCode = document.getElementById('mock-otp-code'); mockCode.textContent = otp; mockHint.style.display = 'none'; setTimeout(() => { if (!document.getElementById('verify-code-modal').classList.contains('hidden')) { mockHint.style.display = 'block'; } }, 3000); if (googleSheetUrl && googleSheetUrl.length > 20) { const payload = { action: 'send_otp', email: user.email, name: user.username, code: otp }; fetch(googleSheetUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) }).then(() => console.log("Sent")).catch(err => { mockHint.style.display = 'block'; }); } else { mockHint.style.display = 'block'; } }
+        function sendOTP(user) { const otp = generateOTP(); const idx = users.findIndex(u => u.username === user.username); if (idx !== -1) { users[idx].otp = otp; saveData(); if (currentUser && currentUser.username === user.username) { currentUser.otp = otp; sessionStorage.setItem('cny_current_user', JSON.stringify(currentUser)); } } const mockHint = document.getElementById('mock-otp-hint'); const mockCode = document.getElementById('mock-otp-code'); mockCode.textContent = otp; mockHint.style.display = 'none'; setTimeout(() => { if (!document.getElementById('verify-code-modal').classList.contains('hidden')) { mockHint.style.display = 'block'; } }, 3000); if (googleSheetUrl && googleSheetUrl.length > 20) { const payload = { action: 'send_otp', email: user.email, name: user.username, code: otp }; fetch(googleSheetUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload), referrerPolicy: 'no-referrer' }).then(() => console.log("Sent")).catch(err => { mockHint.style.display = 'block'; }); } else { mockHint.style.display = 'block'; } }
         function openVerificationModal() { if (!currentUser) return; document.getElementById('otp-input').value = ''; document.getElementById('otp-message').textContent = `請輸入發送至 ${currentUser.email} 的 6 位數代碼`; document.getElementById('mock-otp-hint').style.display = 'none'; const idx = users.findIndex(u => u.username === currentUser.username); if (idx !== -1 && !users[idx].otp) sendOTP(currentUser); else if (idx !== -1) { document.getElementById('mock-otp-code').textContent = users[idx].otp; setTimeout(() => { document.getElementById('mock-otp-hint').style.display = 'block'; }, 1000); } document.getElementById('verify-code-modal').classList.remove('hidden'); }
         function closeVerificationModal() { document.getElementById('verify-code-modal').classList.add('hidden'); }
         function verifyOTP() { const inputCode = document.getElementById('otp-input').value; const idx = users.findIndex(u => u.username === currentUser.username); if (idx !== -1) { const correctOTP = users[idx].otp; if (inputCode === correctOTP) { users[idx].isVerified = true; users[idx].otp = null; currentUser.isVerified = true; saveData(); sessionStorage.setItem('cny_current_user', JSON.stringify(currentUser)); checkLoginStatus(); closeVerificationModal(); showModal("驗證成功", "帳號已啟用！", "success"); } else { showModal("驗證失敗", "驗證碼錯誤", "error"); } } }
@@ -569,16 +493,93 @@
         // --- v3.6 核心修改：動態分類渲染 ---
         function renderProducts(category) { const listEl = document.getElementById('product-list'); listEl.innerHTML = ''; const filtered = category === 'all' ? products : products.filter(p => p.category === category); if (filtered.length === 0) { listEl.innerHTML = '<div class="col-span-full text-center text-gray-500 py-10">此分類暫無商品</div>'; return; } filtered.forEach((p, index) => { const div = document.createElement('div'); div.className = `product-card bg-white rounded-lg shadow-md overflow-hidden animate-fade-in flex flex-col`; div.innerHTML = ` <div class="h-48 overflow-hidden relative group"> <img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover hover:scale-110 transition duration-500" onerror="this.src='https://placehold.co/400x300?text=No+Image'"> ${p.stock < 5 ? '<div class="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded-full animate-pulse shadow">即將售完</div>' : ''} </div> <div class="p-4 flex flex-col flex-grow"> <h3 class="text-lg font-bold text-gray-800 mb-1">${p.name}</h3> <p class="text-sm text-gray-500 mb-3 h-10 overflow-hidden line-clamp-2">${p.desc}</p> <div class="mt-auto pt-2 border-t border-gray-100"> <div class="flex justify-between items-center mb-2"> <span class="text-xl font-bold text-cny-red">NT$ ${p.price}</span> <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">剩餘: ${p.stock}</span> </div> <div class="flex items-center justify-between gap-2"> <div class="flex items-center border border-gray-300 rounded-full bg-gray-50 h-8"> <button onclick="adjustCardQty(${p.id}, -1)" class="w-8 h-full flex items-center justify-center text-gray-600 hover:text-cny-red transition rounded-l-full hover:bg-gray-200">-</button> <input type="number" id="qty-input-${p.id}" value="1" min="1" max="${p.stock}" class="w-10 text-center bg-transparent focus:outline-none text-sm font-bold" readonly> <button onclick="adjustCardQty(${p.id}, 1)" class="w-8 h-full flex items-center justify-center text-gray-600 hover:text-cny-red transition rounded-r-full hover:bg-gray-200">+</button> </div> <button onclick="addToCart(${p.id})" class="flex-grow bg-cny-gold hover:bg-yellow-500 text-white h-8 rounded-full text-sm font-bold shadow transition flex items-center justify-center active:scale-95"><i class="fa-solid fa-cart-plus mr-1"></i> 加入</button> </div> </div> </div>`; listEl.appendChild(div); }); }
         function filterProducts(c){ currentFilter=c; document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active','bg-cny-red','text-white','border-cny-red')||b.classList.add('bg-white','text-gray-600','border-gray-300')); renderProducts(c); }
-        // v3.6: CSV 解析修正
+        // v3.6: CSV 解析修正 (Auto-detect Big5)
         function parseCSVLine(text) { const re = /(?!\s*$)\s*(?:'([^']*)'|"([^"]*)"|([^,'"\s\\]*(?:\s+[^,'"\s\\]+)*))\s*(?:,|$)/g; const arr = []; let match; while ((match = re.exec(text)) !== null) { arr.push(match[2] !== undefined ? match[2] : (match[1] !== undefined ? match[1] : match[3] || '')); } return arr; }
-        function handleProductImport(input) { const file = input.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { const text = e.target.result; const lines = text.replace(/\r\n/g, '\n').split('\n'); let successCount = 0; let errorCount = 0; let errorMsg = ''; for (let i = 1; i < lines.length; i++) { const rowText = lines[i].trim(); if (!rowText) continue; const cols = parseCSVLine(rowText); if (cols.length < 2 || !cols[0] || isNaN(parseInt(cols[1]))) { errorCount++; if (errorCount <= 5) errorMsg += `第 ${i+1} 行格式錯誤<br>`; continue; } const name = cols[0].trim(); const price = parseInt(cols[1].trim()); let category = (cols[2] || 'other').trim().toLowerCase(); const stock = parseInt(cols[3] || '0'); const image = (cols[4] || "https://via.placeholder.com/300").trim(); const desc = (cols[5] || "").trim(); 
-            // v3.6: 使用動態分類查找代碼 (若找不到則用原文)
-            const catObj = categories.find(c => c.name === category || c.id === category);
-            category = catObj ? catObj.id : category; 
+        
+        function handleProductImport(input) { 
+            const file = input.files[0]; 
+            if (!file) return; 
+
+            // 內層解析函式
+            const processText = (text) => {
+                // 移除可能的 BOM
+                if (text.charCodeAt(0) === 0xFEFF) { text = text.substr(1); }
+                const lines = text.replace(/\r\n/g, '\n').split('\n'); 
+                let successCount = 0; 
+                let errorCount = 0; 
+                let errorMsg = ''; 
+
+                for (let i = 1; i < lines.length; i++) { 
+                    const rowText = lines[i].trim(); 
+                    if (!rowText) continue; 
+                    const cols = parseCSVLine(rowText); 
+                    
+                    // 價格容錯: 移除 $ 和 ,
+                    let priceStr = cols[1] ? cols[1].replace(/[$,]/g, '') : '';
+                    let stockStr = cols[3] ? cols[3].replace(/[,]/g, '') : '0';
+
+                    if (cols.length < 2 || !cols[0] || isNaN(parseInt(priceStr))) { 
+                        errorCount++; 
+                        if (errorCount <= 5) errorMsg += `第 ${i+1} 行格式錯誤<br>`; 
+                        continue; 
+                    } 
+                    
+                    const name = cols[0].trim(); 
+                    const price = parseInt(priceStr); 
+                    let category = (cols[2] || 'other').trim().toLowerCase(); 
+                    const stock = parseInt(stockStr); 
+                    const image = (cols[4] || "https://via.placeholder.com/300").trim(); 
+                    const desc = (cols[5] || "").trim(); 
+                    
+                    const catObj = categories.find(c => c.name === category || c.id === category); 
+                    category = catObj ? catObj.id : category; 
+                    
+                    const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1; 
+                    products.push({ id: newId, name, price, category, stock, image, desc }); 
+                    successCount++; 
+                }
+                return { successCount, errorCount, errorMsg };
+            };
+
+            const reader = new FileReader(); 
+            reader.onload = function(e) { 
+                const text = e.target.result;
+                let result = processText(text);
+
+                // 自動編碼偵測邏輯：如果 UTF-8 解析失敗 (全是錯誤或無成功)，嘗試 Big5
+                if (result.successCount === 0 && result.errorCount > 0) {
+                    console.log("UTF-8 parsing failed, trying Big5...");
+                    const readerBig5 = new FileReader();
+                    readerBig5.onload = function(e2) {
+                        const textBig5 = e2.target.result;
+                        let resultBig5 = processText(textBig5);
+                        
+                        if (resultBig5.successCount > 0) {
+                            finishImport(resultBig5);
+                        } else {
+                            // 兩者都失敗，顯示 UTF-8 的錯誤
+                            finishImport(result);
+                        }
+                    };
+                    readerBig5.readAsText(file, "Big5");
+                    return;
+                }
+
+                finishImport(result);
+            };
             
-            const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1; products.push({ id: newId, name, price, category, stock, image, desc }); successCount++; } saveData(); renderAdminProducts(); renderProducts(currentFilter); input.value = ''; let resultTitle = errorCount > 0 ? "匯入完成 (部分失敗)" : "匯入成功"; let resultType = errorCount > 0 ? "info" : "success"; let resultBody = `成功匯入: ${successCount} 筆`; if(errorCount > 0) resultBody += `<br><span class="text-red-500">失敗/跳過: ${errorCount} 筆</span><br><span class="text-xs text-gray-500">${errorMsg}</span>`; showModal(resultTitle, resultBody, resultType); }; 
-            // v3.6.1: 自動嘗試 Big5 (雖然這裡只實作 UTF-8，但可透過 prompt 提示)
-            // 若為亂碼，通常第一行會解析失敗，可在此處加入檢查邏輯自動重試 Big5
+            const finishImport = (res) => {
+                saveData(); 
+                renderAdminProducts(); 
+                renderProducts(currentFilter); 
+                input.value = ''; 
+                let resultTitle = res.errorCount > 0 ? "匯入完成 (部分失敗)" : "匯入成功"; 
+                let resultType = res.errorCount > 0 ? "info" : "success"; 
+                let resultBody = `成功匯入: ${res.successCount} 筆`; 
+                if(res.errorCount > 0) resultBody += `<br><span class="text-red-500">失敗/跳過: ${res.errorCount} 筆</span><br><span class="text-xs text-gray-500">請檢查檔案編碼或格式。<br>${res.errorMsg}</span>`; 
+                showModal(resultTitle, resultBody, resultType);
+            };
+
             reader.readAsText(file, "UTF-8"); 
         }
 
