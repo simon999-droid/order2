@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>福氣滿滿 - 精選年貨訂購系統 v3.9.4 (會員訂單中心)</title>
+    <title>福氣滿滿 - 精選年貨訂購系統 v3.9.6 (混合雲架構)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
@@ -75,7 +75,7 @@
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
             <div class="flex items-center gap-2">
                 <i class="fa-solid fa-dragon text-2xl text-cny-gold animate-pulse"></i>
-                <h1 class="text-xl md:text-2xl font-bold tracking-wide">福氣年貨 <span class="text-xs bg-green-600 text-white px-1 rounded ml-1">Cloud v3.9.4</span></h1>
+                <h1 class="text-xl md:text-2xl font-bold tracking-wide">福氣年貨 <span class="text-xs bg-green-600 text-white px-1 rounded ml-1">Cloud v3.9.6</span></h1>
             </div>
             
             <div class="flex items-center gap-4">
@@ -270,6 +270,7 @@
         const appId = 'my-cny-shop-v1'; 
         
         const BASE_PATH = `artifacts/${appId}/public/data`; 
+        const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbx2o14-b5CiyvQuFESJu4-J0jQav7KIRzxHDEj3ZCqvNPm5x5BLjQypXCP0qlENNG59IQ/exec";
 
         // --- 1. 資料庫預設值 ---
         const DEFAULT_PRODUCTS = [
@@ -596,7 +597,22 @@
                     } 
                 }
                 
-                if(googleSheetUrl.length>10) { const orderPayload = { ...ord, action: 'create_order' }; await fetch(googleSheetUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(orderPayload), referrerPolicy: 'no-referrer'}); } 
+                // Use preferred or default URL for syncing if set
+                let targetSheetUrl = googleSheetUrl;
+                if (!targetSheetUrl || targetSheetUrl.length < 10) {
+                    targetSheetUrl = DEFAULT_GAS_URL;
+                }
+
+                if(targetSheetUrl && targetSheetUrl.length > 20) { 
+                    const orderPayload = { ...ord, action: 'create_order' }; 
+                    await fetch(targetSheetUrl, {
+                        method:'POST',
+                        mode:'no-cors',
+                        headers:{'Content-Type':'text/plain'},
+                        body:JSON.stringify(orderPayload), 
+                        referrerPolicy: 'no-referrer'
+                    }); 
+                } 
                 
                 showModal('成功',`訂單已送出<br>單號：${orderId}<br>金額: ${total}`,'success'); cart={}; updateCartUI(); e.target.reset(); closeCheckout();
             }catch(err){ console.error(err); showModal("錯誤","失敗: " + err.message,"error"); }finally{ btn.innerHTML=old; btn.disabled=false; }
@@ -909,7 +925,59 @@
         function closeEmailSimulation(){ document.getElementById('email-verify-modal').classList.add('hidden'); }
         async function verifyAccount(){ if(!currentUser)return; const u=users.find(u=>u.username===currentUser.username); if(u){ await updateDoc(doc(db, BASE_PATH, 'users', u._docId), {isVerified:true}); checkLoginStatus(); closeEmailSimulation(); showModal("成功","驗證完成","success"); } }
         function generateOTP() { return Math.floor(100000 + Math.random() * 900000).toString(); }
-        async function sendOTP(user) { const otp = generateOTP(); const u = users.find(u => u.username === user.username); if (u) { await updateDoc(doc(db, BASE_PATH, 'users', u._docId), {otp: otp}); if (currentUser && currentUser.username === user.username) { currentUser.otp = otp; sessionStorage.setItem('cny_current_user', JSON.stringify(currentUser)); } } const mockHint = document.getElementById('mock-otp-hint'); const mockCode = document.getElementById('mock-otp-code'); mockCode.textContent = otp; mockHint.style.display = 'none'; setTimeout(() => { if (!document.getElementById('verify-code-modal').classList.contains('hidden')) { mockHint.style.display = 'block'; } }, 3000); if (googleSheetUrl && googleSheetUrl.length > 20) { const payload = { action: 'send_otp', email: user.email, name: user.username, code: otp }; fetch(googleSheetUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload), referrerPolicy: 'no-referrer' }).then(() => console.log("Sent")).catch(err => { mockHint.style.display = 'block'; }); } else { mockHint.style.display = 'block'; } }
+        
+        async function sendOTP(user) { 
+            const otp = generateOTP(); 
+            const u = users.find(u => u.username === user.username); 
+            if (u) { 
+                await updateDoc(doc(db, BASE_PATH, 'users', u._docId), {otp: otp}); 
+                if (currentUser && currentUser.username === user.username) { 
+                    currentUser.otp = otp; 
+                    sessionStorage.setItem('cny_current_user', JSON.stringify(currentUser)); 
+                } 
+            } 
+            
+            const mockHint = document.getElementById('mock-otp-hint'); 
+            const mockCode = document.getElementById('mock-otp-code'); 
+            mockCode.textContent = otp; 
+            
+            // Try Sending Email
+            let targetSheetUrl = googleSheetUrl;
+            if (!targetSheetUrl || targetSheetUrl.length < 10) {
+                targetSheetUrl = DEFAULT_GAS_URL;
+            }
+
+            if (targetSheetUrl && targetSheetUrl.length > 20) { 
+                const payload = { action: 'send_otp', email: user.email, name: user.name || user.username, code: otp }; 
+                
+                // Show mock hint immediately in background just in case, but hidden if modal closed
+                mockHint.style.display = 'none'; 
+
+                fetch(targetSheetUrl, { 
+                    method: 'POST', 
+                    mode: 'no-cors', 
+                    headers: { 'Content-Type': 'text/plain' }, 
+                    body: JSON.stringify(payload), 
+                    referrerPolicy: 'no-referrer' 
+                })
+                .then(() => {
+                    console.log("Email request sent");
+                    // Still show mock hint after a delay as a fallback for user convenience in demo
+                    setTimeout(() => { 
+                        if (!document.getElementById('verify-code-modal').classList.contains('hidden')) { 
+                            mockHint.style.display = 'block'; 
+                        } 
+                    }, 5000);
+                })
+                .catch(err => { 
+                    console.error("Email failed", err);
+                    mockHint.style.display = 'block'; 
+                }); 
+            } else { 
+                mockHint.style.display = 'block'; 
+            } 
+        }
+        
         function openVerificationModal() { if (!currentUser) return; document.getElementById('otp-input').value = ''; document.getElementById('otp-message').textContent = `請輸入發送至 ${currentUser.email} 的 6 位數代碼`; document.getElementById('mock-otp-hint').style.display = 'none'; const u = users.find(u => u.username === currentUser.username); if (u && !u.otp) sendOTP(currentUser); else if (u) { document.getElementById('mock-otp-code').textContent = u.otp; setTimeout(() => { document.getElementById('mock-otp-hint').style.display = 'block'; }, 1000); } document.getElementById('verify-code-modal').classList.remove('hidden'); }
         function closeVerificationModal() { document.getElementById('verify-code-modal').classList.add('hidden'); }
         async function verifyOTP() { const inputCode = document.getElementById('otp-input').value; const u = users.find(u => u.username === currentUser.username); if (u) { const correctOTP = u.otp; if (inputCode === correctOTP) { await updateDoc(doc(db, BASE_PATH, 'users', u._docId), {isVerified:true, otp:null}); currentUser.isVerified = true; sessionStorage.setItem('cny_current_user', JSON.stringify(currentUser)); checkLoginStatus(); closeVerificationModal(); showModal("驗證成功", "帳號已啟用！", "success"); } else { showModal("驗證失敗", "驗證碼錯誤", "error"); } } }
